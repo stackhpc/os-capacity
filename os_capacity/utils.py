@@ -32,7 +32,7 @@ def get_resource_providers(app):
     return [(f['uuid'], f['name']) for f in raw_rps]
 
 
-def get_inventories(app, rps):
+def _get_inventories(app, rps):
     client = app.placement_client
     inventories = {}
     for uuid, name in rps:
@@ -45,3 +45,13 @@ def get_inventories(app, rps):
             max_unit = raw_inventories[resource_class]['max_unit']
             inventories[uuid][resource_class] = max_unit
     return inventories
+
+
+def get_all_inventories(app):
+    rps = get_resource_providers(app)
+    all_inventories = _get_inventories(app, rps)
+
+    for rp_uuid, rp_name in rps:
+        rp_inventories = all_inventories[rp_uuid]
+        yield (rp_uuid, rp_name, rp_inventories['DISK_GB'],
+               rp_inventories['MEMORY_MB'], rp_inventories['VCPU'])

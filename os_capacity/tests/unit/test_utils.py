@@ -115,7 +115,7 @@ class TestUtils(unittest.TestCase):
         app = mock.MagicMock()
         app.placement_client.get.return_value = fake_response
 
-        result = utils.get_inventories(app, fake_rps)
+        result = utils._get_inventories(app, fake_rps)
 
         app.placement_client.get.assert_called_once_with(
             "/resource_providers/uuid/inventories")
@@ -125,3 +125,19 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(10, inventories['DISK_GB'])
         self.assertEqual(20, inventories['MEMORY_MB'])
         self.assertEqual(30, inventories['VCPU'])
+
+    @mock.patch.object(utils, '_get_inventories')
+    @mock.patch.object(utils, 'get_resource_providers')
+    def test_get_all_inventories(self, mock_grp, mock_gi):
+        fake_rps = [('uuid1', 'name1'), ('uuid2', 'name2')]
+        mock_grp.return_value = fake_rps
+        fake_inventories = {
+            'uuid1': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
+            'uuid2': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 32}}
+        mock_gi.return_value = fake_inventories
+
+        result = list(utils.get_all_inventories(mock.Mock()))
+
+        self.assertEqual(2, len(result))
+        self.assertEqual(('uuid1', 'name1', 10, 20, 30), result[0])
+        self.assertEqual(('uuid2', 'name2', 10, 20, 32), result[1])

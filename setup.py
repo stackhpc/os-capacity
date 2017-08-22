@@ -50,8 +50,8 @@ setup(
             'os-capacity = os_capacity.cmd.os_capacity:main',
         ],
         'os_capacity.cli': [
-            'capacity_get = os_capacity.cli.commands:CapacityGet',
             'flavor_list = os_capacity.cli.commands:FlavorList',
+            'resources_all = os_capacity.cli.commands:ListAllResources',
         ],
     },
 )
