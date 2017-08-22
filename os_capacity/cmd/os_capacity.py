@@ -16,6 +16,16 @@ import sys
 
 from cliff.app import App
 from cliff.commandmanager import CommandManager
+import os_client_config
+
+
+def get_cloud_config():
+    # TODO(johngarbutt) consider passing in argument parser
+    return os_client_config.get_config()
+
+
+def get_client(cloud_config, service_type):
+    return cloud_config.get_session_client(service_type)
 
 
 class CapacityApp(App):
@@ -30,6 +40,12 @@ class CapacityApp(App):
 
     def initialize_app(self, argv):
         self.LOG.debug('initialize_app')
+
+        config = os_client_config.get_config()
+        self.compute_client = config.get_session_client("compute")
+        self.placement_client = config.get_session_client("placement")
+
+        self.LOG.debug('setup Keystone API REST clients')
 
     def prepare_to_run_command(self, cmd):
         self.LOG.debug('prepare_to_run_command %s', cmd.__class__.__name__)

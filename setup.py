@@ -51,6 +51,7 @@ setup(
         ],
         'os_capacity.cli': [
             'capacity_get = os_capacity.cli.commands:CapacityGet',
+            'flavor_list = os_capacity.cli.commands:FlavorList',
         ],
     },
 )

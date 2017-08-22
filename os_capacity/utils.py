@@ -15,3 +15,10 @@
 
 def get_capacity():
     return [{"flavor": "foo", "count": 1}]
+
+
+def get_flavors(app):
+    client = app.compute_client
+    response = client.get("/flavors").json()
+    raw_flavors = response['flavors']
+    return [(flavor['id'], flavor['name']) for flavor in raw_flavors]

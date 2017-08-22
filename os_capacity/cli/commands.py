@@ -14,7 +14,6 @@
 
 
 import logging
-import os
 
 from cliff.lister import Lister
 
@@ -30,8 +29,18 @@ class CapacityGet(Lister):
     log = logging.getLogger(__name__)
 
     def take_action(self, parsed_args):
-        capacity = utils.get_capacity() 
+        capacity = utils.get_capacity()
         return (
             ('Flavor', 'Count'),
             ((entry["flavor"], entry["count"]) for entry in capacity)
         )
+
+
+class FlavorList(Lister):
+    """List all the flavors."""
+
+    log = logging.getLogger(__name__)
+
+    def take_action(self, parsed_args):
+        flavors = utils.get_flavors(self.app)
+        return (('UUID', 'Name'), flavors)
