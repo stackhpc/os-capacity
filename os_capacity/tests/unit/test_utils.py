@@ -62,3 +62,37 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(fake_flavor['vcpus'], flavor[2])
         self.assertEqual(fake_flavor['ram'], flavor[3])
         self.assertEqual(fake_flavor['disk'], flavor[4])
+
+    def test_get_resource_providers(self):
+        fake_rp = {
+            'generation': 6,
+            'name': '6c819315-a655-4718-9b52-4e8252a82131',
+            'uuid': u'97585d53-67a6-4e9d-9fe7-cd75b331b17b',
+            'links': [
+                {'href': '/resource_providers'
+                         '/97585d53-67a6-4e9d-9fe7-cd75b331b17c',
+                 'rel': 'self'},
+                {'href': '/resource_providers'
+                         '/97585d53-67a6-4e9d-9fe7-cd75b331b17c/aggregates',
+                 'rel': u'aggregates'},
+                {'href': '/resource_providers'
+                         '/97585d53-67a6-4e9d-9fe7-cd75b331b17c/inventories',
+                 'rel': 'inventories'},
+                {'href': '/resource_providers'
+                         '/97585d53-67a6-4e9d-9fe7-cd75b331b17c/usages',
+                 'rel': u'usages'}
+            ]
+        }
+        fake_response = mock.MagicMock()
+        fake_response.json.return_value = {'resource_providers': [fake_rp]}
+        app = mock.MagicMock()
+        app.placement_client.get.return_value = fake_response
+
+        result = utils.get_resource_providers(app)
+
+        app.placement_client.get.assert_called_once_with("/resource_providers")
+        self.assertEqual(1, len(result))
+        rp = result[0]
+        self.assertEqual(2, len(rp))
+        self.assertEqual(fake_rp['uuid'], rp[0])
+        self.assertEqual(fake_rp['name'], rp[1])

@@ -23,3 +23,10 @@ def get_flavors(app):
     raw_flavors = response['flavors']
     return [(f['id'], f['name'], f['vcpus'], f['ram'], f['disk'])
             for f in raw_flavors]
+
+
+def get_resource_providers(app):
+    client = app.placement_client
+    response = client.get("/resource_providers").json()
+    raw_rps = response['resource_providers']
+    return [(f['uuid'], f['name']) for f in raw_rps]
