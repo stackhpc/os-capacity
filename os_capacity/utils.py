@@ -19,6 +19,7 @@ def get_capacity():
 
 def get_flavors(app):
     client = app.compute_client
-    response = client.get("/flavors").json()
+    response = client.get("/flavors/detail").json()
     raw_flavors = response['flavors']
-    return [(flavor['id'], flavor['name']) for flavor in raw_flavors]
+    return [(f['id'], f['name'], f['vcpus'], f['ram'], f['disk'])
+            for f in raw_flavors]

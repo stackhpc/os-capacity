@@ -43,4 +43,4 @@ class FlavorList(Lister):
 
     def take_action(self, parsed_args):
         flavors = utils.get_flavors(self.app)
-        return (('UUID', 'Name'), flavors)
+        return (('UUID', 'Name', 'VCPUs', 'RAM MB', 'DISK GB'), flavors)
