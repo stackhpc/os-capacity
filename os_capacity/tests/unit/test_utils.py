@@ -66,21 +66,21 @@ class TestUtils(unittest.TestCase):
     def test_get_resource_providers(self):
         fake_rp = {
             'generation': 6,
-            'name': '6c819315-a655-4718-9b52-4e8252a82131',
-            'uuid': u'97585d53-67a6-4e9d-9fe7-cd75b331b17b',
+            'name': 'name1',
+            'uuid': '97585d53-67a6-4e9d-9fe7-cd75b331b17b',
             'links': [
                 {'href': '/resource_providers'
                          '/97585d53-67a6-4e9d-9fe7-cd75b331b17c',
                  'rel': 'self'},
                 {'href': '/resource_providers'
                          '/97585d53-67a6-4e9d-9fe7-cd75b331b17c/aggregates',
-                 'rel': u'aggregates'},
+                 'rel': 'aggregates'},
                 {'href': '/resource_providers'
                          '/97585d53-67a6-4e9d-9fe7-cd75b331b17c/inventories',
                  'rel': 'inventories'},
                 {'href': '/resource_providers'
                          '/97585d53-67a6-4e9d-9fe7-cd75b331b17c/usages',
-                 'rel': u'usages'}
+                 'rel': 'usages'}
             ]
         }
         fake_response = mock.MagicMock()
@@ -91,14 +91,10 @@ class TestUtils(unittest.TestCase):
         result = utils.get_resource_providers(app)
 
         app.placement_client.get.assert_called_once_with("/resource_providers")
-        self.assertEqual(1, len(result))
-        rp = result[0]
-        self.assertEqual(2, len(rp))
-        self.assertEqual(fake_rp['uuid'], rp[0])
-        self.assertEqual(fake_rp['name'], rp[1])
+        self.assertEqual([(fake_rp['uuid'], 'name1')], result)
 
     def test_get_inventories(self):
-        fake_rps = [('uuid', 'name')]
+        fake_rps = [('uuid1', 'name1'), ('uuid2', 'name2')]
         fake_ironic_inventories = {'inventories': {
             'DISK_GB': {
                 'allocation_ratio': 1.0,
@@ -117,14 +113,12 @@ class TestUtils(unittest.TestCase):
 
         result = utils._get_inventories(app, fake_rps)
 
-        app.placement_client.get.assert_called_once_with(
-            "/resource_providers/uuid/inventories")
-        self.assertEqual(1, len(result))
-        inventories = result['uuid']
-        self.assertEqual(3, len(inventories))
-        self.assertEqual(10, inventories['DISK_GB'])
-        self.assertEqual(20, inventories['MEMORY_MB'])
-        self.assertEqual(30, inventories['VCPU'])
+        app.placement_client.get.assert_called_with(
+            "/resource_providers/uuid2/inventories")
+        self.assertEqual({
+                'uuid1': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
+                'uuid2': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
+            }, result)
 
     @mock.patch.object(utils, '_get_inventories')
     @mock.patch.object(utils, 'get_resource_providers')
@@ -138,6 +132,7 @@ class TestUtils(unittest.TestCase):
 
         result = list(utils.get_all_inventories(mock.Mock()))
 
-        self.assertEqual(2, len(result))
-        self.assertEqual(('uuid1', 'name1', 10, 20, 30), result[0])
-        self.assertEqual(('uuid2', 'name2', 10, 20, 32), result[1])
+        self.assertEqual([
+                ('uuid1', 'name1', 10, 20, 30),
+                ('uuid2', 'name2', 10, 20, 32)
+            ], result)

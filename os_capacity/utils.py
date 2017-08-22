@@ -36,7 +36,6 @@ def _get_inventories(app, rps):
     client = app.placement_client
     inventories = {}
     for uuid, name in rps:
-        print uuid
         url = "/resource_providers/%s/inventories" % uuid
         response = client.get(url).json()
         raw_inventories = response['inventories']
