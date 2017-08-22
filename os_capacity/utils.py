@@ -13,6 +13,9 @@
 # under the License.
 
 import collections
+import logging
+
+LOG = logging.getLogger(__name__)
 
 
 def get_capacity():
@@ -20,6 +23,7 @@ def get_capacity():
 
 
 def get_flavors(app):
+    LOG.debug("Getting flavors")
     client = app.compute_client
     response = client.get("/flavors/detail").json()
     raw_flavors = response['flavors']
@@ -28,6 +32,7 @@ def get_flavors(app):
 
 
 def get_resource_providers(app):
+    LOG.debug("Getting resource providers")
     client = app.placement_client
     response = client.get("/resource_providers").json()
     raw_rps = response['resource_providers']
@@ -35,6 +40,7 @@ def get_resource_providers(app):
 
 
 def _get_inventories(app, rps):
+    LOG.debug("Getting all inventories")
     client = app.placement_client
     inventories = {}
     for uuid, name in rps:
@@ -49,6 +55,7 @@ def _get_inventories(app, rps):
 
 
 def _get_allocations(app, rps):
+    LOG.debug("Getting all allocations")
     client = app.placement_client
     allocations_by_rp = {}
     for uuid, name in rps:
