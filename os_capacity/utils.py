@@ -52,5 +52,5 @@ def get_all_inventories(app):
 
     for rp_uuid, rp_name in rps:
         rp_inventories = all_inventories[rp_uuid]
-        yield (rp_uuid, rp_name, rp_inventories['DISK_GB'],
-               rp_inventories['MEMORY_MB'], rp_inventories['VCPU'])
+        yield (rp_uuid, rp_name, rp_inventories.get('DISK_GB'),
+               rp_inventories.get('MEMORY_MB'), rp_inventories.get('VCPU'))

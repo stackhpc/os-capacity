@@ -127,12 +127,12 @@ class TestUtils(unittest.TestCase):
         mock_grp.return_value = fake_rps
         fake_inventories = {
             'uuid1': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
-            'uuid2': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 32}}
+            'uuid2': {}}
         mock_gi.return_value = fake_inventories
 
         result = list(utils.get_all_inventories(mock.Mock()))
 
         self.assertEqual([
                 ('uuid1', 'name1', 10, 20, 30),
-                ('uuid2', 'name2', 10, 20, 32)
+                ('uuid2', 'name2', None, None, None)
             ], result)
