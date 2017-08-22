@@ -46,10 +46,19 @@ class FlavorList(Lister):
         return (('UUID', 'Name', 'VCPUs', 'RAM MB', 'DISK GB'), flavors)
 
 
-class ListAllResources(Lister):
+class ListResourcesAll(Lister):
     """List all cloud resources."""
 
     def take_action(self, parsed_args):
         inventories = utils.get_all_inventories(self.app)
         return (('UUID', 'Name', 'DISK GB', 'MEMORY MB', 'VCPUs'),
                 inventories)
+
+
+class ListResourcesGroups(Lister):
+    """Lists counts of resource providers with similar inventories."""
+
+    def take_action(self, parsed_args):
+        inventories = utils.get_all_inventories(self.app)
+        groups = utils.group_all_inventories(inventories)
+        return (('Resource Class Groups', 'Count'), groups)

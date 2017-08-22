@@ -51,7 +51,8 @@ setup(
         ],
         'os_capacity.cli': [
             'flavor_list = os_capacity.cli.commands:FlavorList',
-            'resources_all = os_capacity.cli.commands:ListAllResources',
+            'resources_all = os_capacity.cli.commands:ListResourcesAll',
+            'resources_group = os_capacity.cli.commands:ListResourcesGroups',
         ],
     },
 )

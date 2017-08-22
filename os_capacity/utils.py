@@ -54,3 +54,11 @@ def get_all_inventories(app):
         rp_inventories = all_inventories[rp_uuid]
         yield (rp_uuid, rp_name, rp_inventories.get('DISK_GB'),
                rp_inventories.get('MEMORY_MB'), rp_inventories.get('VCPU'))
+
+
+def group_all_inventories(all_inventories):
+    trimed = [i[2:] for i in all_inventories]
+    import collections
+    counted = collections.Counter(trimed)
+    for group in counted.keys():
+        yield ("DISK_GB:%s,MEMORY_MB:%s,VCPU:%s" % group, counted[group])

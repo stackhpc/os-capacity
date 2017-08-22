@@ -136,3 +136,17 @@ class TestUtils(unittest.TestCase):
                 ('uuid1', 'name1', 10, 20, 30),
                 ('uuid2', 'name2', None, None, None)
             ], result)
+
+    def test_group_inventories(self):
+        fake_all_inventories = [
+            ('uuid1', 'name1', 10, 20, 30),
+            ('uuid2', 'name2', 0, 0, 0),
+            ('uuid3', 'name3', 10, 20, 30),
+        ]
+
+        result = list(utils.group_all_inventories(fake_all_inventories))
+
+        self.assertEquals(2, len(result))
+        self.assertEquals([
+            ('DISK_GB:10,MEMORY_MB:20,VCPU:30', 2),
+            ('DISK_GB:0,MEMORY_MB:0,VCPU:0', 1)], result)
