@@ -60,6 +60,8 @@ class ListResourcesGroups(Lister):
 
     def take_action(self, parsed_args):
         flavors = utils.get_flavors(self.app)
-        inventories = utils.get_all_inventories(self.app)
-        groups = utils.group_all_inventories(inventories, flavors)
-        return (('Resource Class Groups', 'Count', 'Flavors'), groups)
+        inventories_and_usage = utils.get_all_inventories_and_usage(self.app)
+        groups = utils.group_all_inventories(inventories_and_usage, flavors)
+        return (
+            ('Resource Class Groups', 'Total', 'Used', 'Free', 'Flavors'),
+            groups)

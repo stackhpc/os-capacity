@@ -81,9 +81,15 @@ def get_all_inventories_and_usage(app):
                has_allocations)
 
 
-def group_all_inventories(all_inventories, flavors):
-    trimed_inventory = [i[2:] for i in all_inventories]
-    counted_inventories = collections.Counter(trimed_inventory)
+def group_all_inventories(all_inventories_and_usage, flavors):
+    counted_inventories = collections.defaultdict(int)
+    usage = collections.defaultdict(int)
+    for inventory in all_inventories_and_usage:
+        resource_key = inventory[2:-1]  # TODO(johngarbutt) fix this rubbish
+        is_used = inventory[-1]
+        counted_inventories[resource_key] += 1
+        if is_used:
+            usage[resource_key] +=1
 
     # TODO(johngarbutt) this flavor grouping is very ironic specific
     grouped_flavors = collections.defaultdict(list)
@@ -96,4 +102,8 @@ def group_all_inventories(all_inventories, flavors):
         resources = "VCPU:%s,MEMORY_MB:%s,DISK_GB:%s" % group
         matching_flavors = grouped_flavors[group]
         matching_flavors = ", ".join(matching_flavors)
-        yield (resources, counted_inventories[group], matching_flavors)
+        total = counted_inventories[group]
+        used = usage[group]
+        free = total - used
+
+        yield (resources, total, used, free, matching_flavors)

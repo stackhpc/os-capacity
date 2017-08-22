@@ -145,9 +145,9 @@ class TestUtils(unittest.TestCase):
 
     def test_group_inventories(self):
         fake_all_inventories = [
-            ('uuid1', 'name1', 30, 20, 10),
-            ('uuid2', 'name2', 0, 0, 0),
-            ('uuid3', 'name3', 30, 20, 10),
+            ('uuid1', 'name1', 30, 20, 10, True),
+            ('uuid2', 'name2', 0, 0, 0, False),
+            ('uuid3', 'name3', 30, 20, 10, False),
         ]
         fake_flavors = [
             ('uuid1', 'test1', 30, 20, 10),
@@ -160,8 +160,8 @@ class TestUtils(unittest.TestCase):
 
         self.assertEquals(2, len(result))
         self.assertEquals([
-            ('VCPU:30,MEMORY_MB:20,DISK_GB:10', 2, "test1, test2"),
-            ('VCPU:0,MEMORY_MB:0,DISK_GB:0', 1, '')], result)
+            ('VCPU:30,MEMORY_MB:20,DISK_GB:10', 2, 1, 1, "test1, test2"),
+            ('VCPU:0,MEMORY_MB:0,DISK_GB:0', 1, 0, 1, '')], result)
 
     def test_get_all_allocations(self):
         fake_rps = [('uuid1', 'name1')]
