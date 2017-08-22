@@ -30,3 +30,18 @@ def get_resource_providers(app):
     response = client.get("/resource_providers").json()
     raw_rps = response['resource_providers']
     return [(f['uuid'], f['name']) for f in raw_rps]
+
+
+def get_inventories(app, rps):
+    client = app.placement_client
+    inventories = {}
+    for uuid, name in rps:
+        print uuid
+        url = "/resource_providers/%s/inventories" % uuid
+        response = client.get(url).json()
+        raw_inventories = response['inventories']
+        inventories[uuid] = {}
+        for resource_class in raw_inventories.keys():
+            max_unit = raw_inventories[resource_class]['max_unit']
+            inventories[uuid][resource_class] = max_unit
+    return inventories

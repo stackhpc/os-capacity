@@ -96,3 +96,32 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(2, len(rp))
         self.assertEqual(fake_rp['uuid'], rp[0])
         self.assertEqual(fake_rp['name'], rp[1])
+
+    def test_get_inventories(self):
+        fake_rps = [('uuid', 'name')]
+        fake_ironic_inventories = {'inventories': {
+            'DISK_GB': {
+                'allocation_ratio': 1.0,
+                'max_unit': 10,
+                'min_unit': 1,
+                'reserved': 0,
+                'step_size': 1,
+                'total': 10},
+            'MEMORY_MB': {'max_unit': 20},
+            'VCPU': {'max_unit': 30},
+        }}
+        fake_response = mock.MagicMock()
+        fake_response.json.return_value = fake_ironic_inventories
+        app = mock.MagicMock()
+        app.placement_client.get.return_value = fake_response
+
+        result = utils.get_inventories(app, fake_rps)
+
+        app.placement_client.get.assert_called_once_with(
+            "/resource_providers/uuid/inventories")
+        self.assertEqual(1, len(result))
+        inventories = result['uuid']
+        self.assertEqual(3, len(inventories))
+        self.assertEqual(10, inventories['DISK_GB'])
+        self.assertEqual(20, inventories['MEMORY_MB'])
+        self.assertEqual(30, inventories['VCPU'])
