@@ -48,6 +48,17 @@ def _get_inventories(app, rps):
     return inventories
 
 
+def _get_allocations(app, rps):
+    client = app.placement_client
+    allocations_by_rp = {}
+    for uuid, name in rps:
+        url = "/resource_providers/%s/allocations" % uuid
+        response = client.get(url).json()
+        raw_allocations = response['allocations']
+        allocations_by_rp[uuid] = raw_allocations
+    return allocations_by_rp
+
+
 def get_all_inventories(app):
     rps = get_resource_providers(app)
     all_inventories = _get_inventories(app, rps)

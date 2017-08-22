@@ -151,3 +151,24 @@ class TestUtils(unittest.TestCase):
         self.assertEquals([
             ('VCPU:30,MEMORY_MB:20,DISK_GB:10', 2, "test1, test2"),
             ('VCPU:0,MEMORY_MB:0,DISK_GB:0', 1, '')], result)
+
+    def test_get_all_allocations(self):
+        fake_rps = [('uuid1', 'name1')]
+        fake_allocations = {
+            'allocations': {
+                'c1d70ef7-f26b-4147-bcf9-0fd91ddaf8f6': {
+                    'resources': {
+                        'DISK_GB': 371,'MEMORY_MB': 131072, 'VCPU': 64}
+                },
+            'resource_provider_generation': 43}
+        }
+        fake_response = mock.MagicMock()
+        fake_response.json.return_value = fake_allocations
+        app = mock.MagicMock()
+        app.placement_client.get.return_value = fake_response
+
+        result = utils._get_allocations(app, fake_rps)
+
+        app.placement_client.get.assert_called_once_with(
+            "/resource_providers/uuid1/allocations")
+        self.assertEqual({'uuid1': fake_allocations['allocations']}, result)
