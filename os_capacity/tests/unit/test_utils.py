@@ -54,14 +54,9 @@ class TestUtils(unittest.TestCase):
 
         result = utils.get_flavors(app)
 
-        self.assertEqual(1, len(result))
-        flavor = result[0]
-        self.assertEqual(5, len(flavor))
-        self.assertEqual(fake_flavor['id'], flavor[0])
-        self.assertEqual(fake_flavor['name'], flavor[1])
-        self.assertEqual(fake_flavor['vcpus'], flavor[2])
-        self.assertEqual(fake_flavor['ram'], flavor[3])
-        self.assertEqual(fake_flavor['disk'], flavor[4])
+        expected_flavors = [('d0e9df0c-34a3-4283-9547-d873e4e86a41',
+            'compute-GPU', 8, 2048, 30)]
+        self.assertEqual(expected_flavors, result)
 
     def test_get_resource_providers(self):
         fake_rp = {
@@ -133,20 +128,26 @@ class TestUtils(unittest.TestCase):
         result = list(utils.get_all_inventories(mock.Mock()))
 
         self.assertEqual([
-                ('uuid1', 'name1', 10, 20, 30),
+                ('uuid1', 'name1', 30, 20, 10),
                 ('uuid2', 'name2', None, None, None)
             ], result)
 
     def test_group_inventories(self):
         fake_all_inventories = [
-            ('uuid1', 'name1', 10, 20, 30),
+            ('uuid1', 'name1', 30, 20, 10),
             ('uuid2', 'name2', 0, 0, 0),
-            ('uuid3', 'name3', 10, 20, 30),
+            ('uuid3', 'name3', 30, 20, 10),
+        ]
+        fake_flavors = [
+            ('uuid1', 'test1', 30, 20, 10),
+            ('uuid2', 'test2', 30, 20, 10),
+            ('uuid3', 'test3', 8, 2048, 30),
         ]
 
-        result = list(utils.group_all_inventories(fake_all_inventories))
+        result = list(utils.group_all_inventories(
+            fake_all_inventories, fake_flavors))
 
         self.assertEquals(2, len(result))
         self.assertEquals([
-            ('DISK_GB:10,MEMORY_MB:20,VCPU:30', 2),
-            ('DISK_GB:0,MEMORY_MB:0,VCPU:0', 1)], result)
+            ('VCPU:30,MEMORY_MB:20,DISK_GB:10', 2, "test1, test2"),
+            ('VCPU:0,MEMORY_MB:0,DISK_GB:0', 1, '')], result)

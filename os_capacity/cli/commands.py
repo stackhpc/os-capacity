@@ -51,7 +51,7 @@ class ListResourcesAll(Lister):
 
     def take_action(self, parsed_args):
         inventories = utils.get_all_inventories(self.app)
-        return (('UUID', 'Name', 'DISK GB', 'MEMORY MB', 'VCPUs'),
+        return (('UUID', 'Name', 'VCPU', 'RAM MB', 'DISK GB'),
                 inventories)
 
 
@@ -59,6 +59,7 @@ class ListResourcesGroups(Lister):
     """Lists counts of resource providers with similar inventories."""
 
     def take_action(self, parsed_args):
+        flavors = utils.get_flavors(self.app)
         inventories = utils.get_all_inventories(self.app)
-        groups = utils.group_all_inventories(inventories)
-        return (('Resource Class Groups', 'Count'), groups)
+        groups = utils.group_all_inventories(inventories, flavors)
+        return (('Resource Class Groups', 'Count', 'Flavors'), groups)

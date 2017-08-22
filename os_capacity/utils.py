@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import collections
+
 
 def get_capacity():
     return [{"flavor": "foo", "count": 1}]
@@ -52,13 +54,25 @@ def get_all_inventories(app):
 
     for rp_uuid, rp_name in rps:
         rp_inventories = all_inventories[rp_uuid]
-        yield (rp_uuid, rp_name, rp_inventories.get('DISK_GB'),
-               rp_inventories.get('MEMORY_MB'), rp_inventories.get('VCPU'))
+        yield (rp_uuid, rp_name,
+               rp_inventories.get('VCPU'),
+               rp_inventories.get('MEMORY_MB'),
+               rp_inventories.get('DISK_GB'))
 
 
-def group_all_inventories(all_inventories):
-    trimed = [i[2:] for i in all_inventories]
-    import collections
-    counted = collections.Counter(trimed)
-    for group in counted.keys():
-        yield ("DISK_GB:%s,MEMORY_MB:%s,VCPU:%s" % group, counted[group])
+def group_all_inventories(all_inventories, flavors):
+    trimed_inventory = [i[2:] for i in all_inventories]
+    counted_inventories = collections.Counter(trimed_inventory)
+
+    # TODO(johngarbutt) this flavor grouping is very ironic specific
+    grouped_flavors = collections.defaultdict(list)
+    for flavor in flavors:
+        name = flavor[1]
+        trimed = flavor[2:]
+        grouped_flavors[trimed] += [name]
+
+    for group in counted_inventories.keys():
+        resources = "VCPU:%s,MEMORY_MB:%s,DISK_GB:%s" % group
+        matching_flavors = grouped_flavors[group]
+        matching_flavors = ", ".join(matching_flavors)
+        yield (resources, counted_inventories[group], matching_flavors)
