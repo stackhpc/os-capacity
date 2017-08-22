@@ -50,8 +50,8 @@ class ListResourcesAll(Lister):
     """List all cloud resources."""
 
     def take_action(self, parsed_args):
-        inventories = utils.get_all_inventories(self.app)
-        return (('UUID', 'Name', 'VCPU', 'RAM MB', 'DISK GB'),
+        inventories = utils.get_all_inventories_and_usage(self.app)
+        return (('UUID', 'Name', 'VCPU', 'RAM MB', 'DISK GB', 'In Use'),
                 inventories)
 
 

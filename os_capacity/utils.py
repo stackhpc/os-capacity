@@ -59,16 +59,19 @@ def _get_allocations(app, rps):
     return allocations_by_rp
 
 
-def get_all_inventories(app):
+def get_all_inventories_and_usage(app):
     rps = get_resource_providers(app)
     all_inventories = _get_inventories(app, rps)
+    all_allocations = _get_allocations(app, rps)
 
     for rp_uuid, rp_name in rps:
         rp_inventories = all_inventories[rp_uuid]
+        has_allocations = True if all_allocations.get(rp_uuid) else False
         yield (rp_uuid, rp_name,
                rp_inventories.get('VCPU'),
                rp_inventories.get('MEMORY_MB'),
-               rp_inventories.get('DISK_GB'))
+               rp_inventories.get('DISK_GB'),
+               has_allocations)
 
 
 def group_all_inventories(all_inventories, flavors):

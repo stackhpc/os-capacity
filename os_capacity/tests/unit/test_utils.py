@@ -115,21 +115,32 @@ class TestUtils(unittest.TestCase):
                 'uuid2': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
             }, result)
 
+    @mock.patch.object(utils, '_get_allocations')
     @mock.patch.object(utils, '_get_inventories')
     @mock.patch.object(utils, 'get_resource_providers')
-    def test_get_all_inventories(self, mock_grp, mock_gi):
-        fake_rps = [('uuid1', 'name1'), ('uuid2', 'name2')]
+    def test_get_all_inventories_and_usage(self, mock_grp, mock_gi, mock_a):
+        fake_rps = [('uuid1', 'name1'), ('uuid2', 'name2'),
+                    ('uuid3', 'name3')]
         mock_grp.return_value = fake_rps
         fake_inventories = {
             'uuid1': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
-            'uuid2': {}}
+            'uuid2': {},
+            'uuid3': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
+        }
         mock_gi.return_value = fake_inventories
+        fake_allocations = {
+            'uuid1': {"server-uuid1": {
+                'DISK_GB': 371,'MEMORY_MB': 131072, 'VCPU': 64}},
+            'uuid3': {},
+        }
+        mock_a.return_value = fake_allocations
 
-        result = list(utils.get_all_inventories(mock.Mock()))
+        result = list(utils.get_all_inventories_and_usage(mock.Mock()))
 
         self.assertEqual([
-                ('uuid1', 'name1', 30, 20, 10),
-                ('uuid2', 'name2', None, None, None)
+                ('uuid1', 'name1', 30, 20, 10, True),
+                ('uuid2', 'name2', None, None, None, False),
+                ('uuid3', 'name3', 30, 20, 10, False),
             ], result)
 
     def test_group_inventories(self):
