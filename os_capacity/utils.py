@@ -69,6 +69,7 @@ AllocationList = collections.namedtuple(
                        "usage", "flavor_id", "days",
                        "project_id", "user_id"))
 
+
 def get_allocation_list(app):
     """Get allocations, add in server and resource provider details."""
     resource_providers = resource_provider.get_all(app.placement_client)
@@ -125,29 +126,48 @@ def get_all_inventories_and_usage(app):
         yield (rp.name, inventory_text, allocation_text)
 
 
-def group_all_inventories(all_inventories_and_usage, flavors):
-    counted_inventories = collections.defaultdict(int)
-    usage = collections.defaultdict(int)
-    for inventory in all_inventories_and_usage:
-        resource_key = inventory[2:-1]  # TODO(johngarbutt) fix this rubbish
-        is_used = inventory[-1]
-        counted_inventories[resource_key] += 1
-        if is_used:
-            usage[resource_key] += 1
-
+def group_all_inventories(app):
     # TODO(johngarbutt) this flavor grouping is very ironic specific
+    all_flavors = flavors.get_all(app.compute_client)
     grouped_flavors = collections.defaultdict(list)
-    for flavor in flavors:
-        name = flavor[1]
-        trimed = flavor[2:]
-        grouped_flavors[trimed] += [name]
+    for flavor in all_flavors:
+        key = (flavor.vcpus, flavor.ram_mb, flavor.disk_gb)
+        grouped_flavors[key] += [flavor.name]
 
-    for group in counted_inventories.keys():
-        resources = "VCPU:%s,MEMORY_MB:%s,DISK_GB:%s" % group
-        matching_flavors = grouped_flavors[group]
+    all_resource_providers = resource_provider.get_all(app.placement_client)
+
+    inventory_counts = collections.defaultdict(int)
+    allocation_counts = collections.defaultdict(int)
+    for rp in all_resource_providers:
+        inventories = resource_provider.get_inventories(
+            app.placement_client, rp)
+
+        vcpus = 0
+        ram_mb = 0
+        disk_gb = 0
+        for inventory in inventories:
+            if "VCPU" in inventory.resource_class:
+                vcpus += inventory.total
+            if "MEMORY" in inventory.resource_class:
+                ram_mb += inventory.total
+            if "DISK" in inventory.resource_class:
+                disk_gb += inventory.total
+        key = (vcpus, ram_mb, disk_gb)
+
+        inventory_counts[key] += 1
+
+        # TODO(johngarbutt) much refinement needed here...
+        allocations = resource_provider.get_allocations(
+            app.placement_client, rp)
+        if allocations:
+            allocation_counts[key] += 1
+
+    for key, inventory_count in inventory_counts.items():
+        resources = "VCPU:%s,MEMORY_MB:%s,DISK_GB:%s" % key
+        matching_flavors = grouped_flavors[key]
         matching_flavors = ", ".join(matching_flavors)
-        total = counted_inventories[group]
-        used = usage[group]
+        total = inventory_count
+        used = allocation_counts[key]
         free = total - used
 
         yield (resources, total, used, free, matching_flavors)
