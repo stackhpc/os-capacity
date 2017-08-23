@@ -73,14 +73,15 @@ def get_allocations(placement_client, resource_provider):
         resources.sort()
 
         allocations.append(Allocation(
-                resource_provider.uuid, consumer_uuid, resources))
+            resource_provider.uuid, consumer_uuid, resources))
     return allocations
 
 
-def get_all_allocations(placement_client):
-    allocations = []
-    resource_providers = get_all(placement_client)
+def get_all_allocations(placement_client, resource_providers=None):
+    if resource_providers is None:
+        resource_providers = get_all(placement_client)
 
+    allocations = []
     for resource_provider in resource_providers:
         allocations += get_allocations(placement_client, resource_provider)
 

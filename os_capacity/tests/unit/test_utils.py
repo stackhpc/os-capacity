@@ -17,6 +17,8 @@ import mock
 import unittest
 
 from os_capacity.data import flavors
+from os_capacity.data import resource_provider
+from os_capacity.data import server
 from os_capacity.tests.unit import fakes
 from os_capacity import utils
 
@@ -146,29 +148,48 @@ class TestUtils(unittest.TestCase):
             "/resource_providers/uuid1/allocations")
         self.assertEqual({'uuid1': FAKE_ALLOCATIONS}, result)
 
+    @mock.patch.object(server, 'get')
+    @mock.patch.object(resource_provider, 'get_all_allocations')
+    @mock.patch.object(resource_provider, 'get_all')
     @mock.patch.object(utils, '_get_now')
-    def test_get_allocation_list(self, mock_now):
-        fake_response = mock.MagicMock()
-        fake_response.json.side_effect = [
-            fakes.RESOURCE_PROVIDER_RESPONSE, FAKE_ALLOCATIONS_RESPONSE]
-        app = mock.MagicMock()
-        app.placement_client.get.return_value = fake_response
+    def test_get_allocation_list(self, mock_now, mock_rps, mock_allocations,
+                                 mock_server):
+        mock_now.return_value = datetime.datetime(2017, 3, 2)
 
-        fake_compute_response = mock.MagicMock()
-        fake_compute_response.json.return_value = fakes.SERVER_RESPONSE
-        app.compute_client.get.return_value = fake_compute_response
-
-        mock_now.return_value = datetime.datetime(2017, 3, 1)
+        mock_rps.return_value = [
+            resource_provider.ResourceProvider("uuid1", "name1"),
+            resource_provider.ResourceProvider("uuid2", "name2")
+        ]
+        mock_allocations.return_value = [
+            resource_provider.Allocation(
+                "uuid1", "consumer_uuid2", [
+                    resource_provider.ResourceClassAmount("DISK_GB", 10),
+                    resource_provider.ResourceClassAmount("MEMORY_MB", 20),
+                    resource_provider.ResourceClassAmount("VCPU", 30)]),
+            resource_provider.Allocation(
+                "uuid2", "consumer_uuid1", [
+                    resource_provider.ResourceClassAmount("DISK_GB", 10),
+                    resource_provider.ResourceClassAmount("MEMORY_MB", 20),
+                    resource_provider.ResourceClassAmount("VCPU", 30)]),
+        ]
+        mock_server.side_effect = [
+            server.Server("consumer_uuid2", "name",
+                datetime.datetime(2017, 3, 1),
+                "user_id", "project_id", "flavor"),
+            server.Server("consumer_uuid2", "name",
+                datetime.datetime(2017, 3, 1),
+                "user_id", "project_id", "flavor"),
+        ]
+        app = mock.Mock()
 
         result = utils.get_allocation_list(app)
 
-        rp_uuid = fakes.RESOURCE_PROVIDER['uuid']
-        app.placement_client.get.assert_called_with(
-            "/resource_providers/%s/allocations" % rp_uuid)
-        self.assertEqual(1, len(result))
-        expected = (
-            fakes.RESOURCE_PROVIDER['name'], FAKE_ALLOCATIONS.keys()[0],
-            'DISK_GB:371, MEMORY_MB:131072, VCPU:64',
-            fakes.SERVER['flavor']['id'], 14,
-            fakes.SERVER['tenant_id'], fakes.SERVER['user_id'])
-        self.assertEqual(expected, result[0])
+        self.assertEqual(2, len(result))
+        expected1 = utils.AllocationList('name1', 'consumer_uuid2',
+            'DISK_GB:10, MEMORY_MB:20, VCPU:30',
+            'flavor', 1, 'project_id', 'user_id')
+        self.assertEqual(expected1, result[0])
+        expected2 = utils.AllocationList('name2', 'consumer_uuid1',
+             'DISK_GB:10, MEMORY_MB:20, VCPU:30',
+             'flavor', 1, 'project_id', 'user_id')
+        self.assertEqual(expected2, result[1])

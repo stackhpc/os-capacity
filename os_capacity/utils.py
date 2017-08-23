@@ -64,34 +64,44 @@ def _get_allocations(app, rps):
     return allocations_by_rp
 
 
+AllocationList = collections.namedtuple(
+    "AllocationList", ("resource_provider_name", "consumer_uuid",
+                       "usage", "flavor_id", "days",
+                       "project_id", "user_id"))
+
 def get_allocation_list(app):
-    rps = _get_resource_providers(app)
-    all_allocations = _get_allocations(app, rps)
-    rp_dict = {uuid: name for uuid, name in rps}
+    """Get allocations, add in server and resource provider details."""
+    resource_providers = resource_provider.get_all(app.placenment_client)
+    rp_dict = {rp.uuid: rp.name for rp in resource_providers}
+
+    all_allocations = resource_provider.get_all_allocations(
+        app.placement_client, resource_providers)
+
     now = _get_now()
 
-    allocation_list = []
-    for rp_uuid in all_allocations.keys():
-        for server_uuid in all_allocations[rp_uuid].keys():
-            rp_name = rp_dict[rp_uuid]
-            usage_amounts = all_allocations[rp_uuid][server_uuid]['resources']
-            usage_amounts = ["%s:%s" % i for i in usage_amounts.items()]
-            usage_amounts.sort()
-            usage_text = ", ".join(usage_amounts)
+    allocation_tuples = []
+    for allocation in all_allocations:
+        rp_name = rp_dict[allocation.resource_provider_uuid]
 
-            server = server_data.get(app.compute_client, server_uuid)
-            delta = now - server.created
-            days_running = delta.days
+        # TODO(johngarbutt) this is too presentation like for here
+        usage_amounts = ["%s:%s" % (rca.resource_class, rca.amount)
+                         for rca in allocation.resources]
+        usage_amounts.sort()
+        usage_text = ", ".join(usage_amounts)
 
-            allocation_list.append((
-                rp_name, server_uuid, usage_text,
-                server.flavor_id, days_running, server.project_id,
-                server.user_id))
+        server = server_data.get(app.compute_client, allocation.consumer_uuid)
+        delta = now - server.created
+        days_running = delta.days
 
-    # Order by project, then user, then most days, then flavor
-    allocation_list.sort(key=lambda x: (x[5], x[6], x[4] * -1, x[3]))
+        allocation_tuples.append(AllocationList(
+            rp_name, allocation.consumer_uuid, usage_text,
+            server.flavor_id, days_running, server.project_id,
+            server.user_id))
 
-    return allocation_list
+    allocation_tuples.sort(key=lambda x: (x.project_id, x.user_id,
+                                          x.days * -1, x.flavor_id))
+
+    return allocation_tuples
 
 
 def get_all_inventories_and_usage(app):
