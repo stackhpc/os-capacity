@@ -73,3 +73,14 @@ INVENTORIES_RESPONSE = {
     'inventories': INVENTORIES,
     'resource_provider_generation': 7,
 }
+
+ALLOCATIONS = {
+    'consumer_uuid': {
+        'resources': {
+            'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30}
+    }
+}
+ALLOCATIONS_RESPONSE = {
+    'allocations': ALLOCATIONS,
+    'resource_provider_generation': 42,
+}

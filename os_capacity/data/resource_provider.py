@@ -21,6 +21,10 @@ ResourceProvider = collections.namedtuple(
 Inventory = collections.namedtuple(
     "Inventory", ("resource_provider_uuid", "resource_class", "total"))
 
+Allocation = collections.namedtuple(
+    "Allocation", ("resource_provider_uuid", "consumer_uuid",
+                   "resource_class", "amount"))
+
 
 def get_all(placement_client):
     response = placement_client.get("/resource_providers").json()
@@ -51,3 +55,27 @@ def get_all_inventories(placement_client):
         inventories += get_inventories(placement_client, resource_provider)
 
     return inventories
+
+
+def get_allocations(placement_client, resource_provider):
+    allocations = []
+    url = "/resource_providers/%s/allocations" % resource_provider.uuid
+    response = placement_client.get(url).json()
+    raw_allocations = response['allocations']
+    for consumer_uuid, resources in raw_allocations.items():
+        class_allocations = resources['resources']
+        for resource_class, amount in class_allocations.items():
+            allocations.append(Allocation(
+                resource_provider.uuid, consumer_uuid,
+                resource_class, amount))
+    return allocations
+
+
+def get_all_allocations(placement_client):
+    allocations = []
+    resource_providers = get_all(placement_client)
+
+    for resource_provider in resource_providers:
+        allocations += get_allocations(placement_client, resource_provider)
+
+    return allocations
