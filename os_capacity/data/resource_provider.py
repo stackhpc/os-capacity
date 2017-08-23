@@ -18,8 +18,36 @@ import collections
 ResourceProvider = collections.namedtuple(
     "ResourceProvider", ("uuid", "name"))
 
+Inventory = collections.namedtuple(
+    "Inventory", ("resource_provider_uuid", "resource_class", "total"))
+
 
 def get_all(placement_client):
     response = placement_client.get("/resource_providers").json()
     raw_rps = response['resource_providers']
     return [ResourceProvider(f['uuid'], f['name']) for f in raw_rps]
+
+
+def get_inventories(placement_client, resource_provider):
+    uuid = resource_provider.uuid
+    url = "/resource_providers/%s/inventories" % uuid
+    response = placement_client.get(url).json()
+    raw_inventories = response['inventories']
+
+    inventories = []
+    for resource_class, raw_inventory in raw_inventories.items():
+        inventory = Inventory(
+            uuid, resource_class, raw_inventory['total'])
+        inventories.append(inventory)
+
+    return inventories
+
+
+def get_all_inventories(placement_client):
+    inventories = []
+    resource_providers = get_all(placement_client)
+
+    for resource_provider in resource_providers:
+        inventories += get_inventories(placement_client, resource_provider)
+
+    return inventories

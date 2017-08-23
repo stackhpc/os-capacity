@@ -53,3 +53,23 @@ RESOURCE_PROVIDER = {
     ]
 }
 RESOURCE_PROVIDER_RESPONSE = {'resource_providers': [RESOURCE_PROVIDER]}
+
+INVENTORIES = {
+    'DISK_GB': {
+        'allocation_ratio': 1.0,
+        'max_unit': 10,
+        'min_unit': 1,
+        'reserved': 0,
+        'step_size': 1,
+        'total': 10},
+    'MEMORY_MB': {
+        'max_unit': 20,
+        'total': 20},
+    'VCPU': {
+        'max_unit': 30,
+        'total': 30},
+}
+INVENTORIES_RESPONSE = {
+    'inventories': INVENTORIES,
+    'resource_provider_generation': 7,
+}

@@ -47,3 +47,48 @@ class TestResourceProvider(unittest.TestCase):
 
         placement_client.get.assert_called_once_with("/resource_providers")
         self.assertEqual([(fakes.RESOURCE_PROVIDER['uuid'], 'name1')], result)
+
+
+class TestInventory(unittest.TestCase):
+
+    def test_get_inventories(self):
+        fake_response = mock.MagicMock()
+        fake_response.json.return_value = fakes.INVENTORIES_RESPONSE
+        client = mock.MagicMock()
+        client.get.return_value = fake_response
+
+        rp = resource_provider.ResourceProvider("uuid", "name")
+
+        result = resource_provider.get_inventories(client, rp)
+
+        client.get.assert_called_once_with(
+            "/resource_providers/uuid/inventories")
+        self.assertEqual(3, len(result))
+        disk = resource_provider.Inventory("uuid", "DISK_GB", 10)
+        self.assertIn(disk, result)
+        mem = resource_provider.Inventory("uuid", "MEMORY_MB", 20)
+        self.assertIn(mem, result)
+        vcpu = resource_provider.Inventory("uuid", "VCPU", 30)
+        self.assertIn(vcpu, result)
+
+    @mock.patch.object(resource_provider, 'get_all')
+    def test_get_all_inventories(self, mock_get_all):
+        fake_response = mock.MagicMock()
+        fake_response.json.return_value = fakes.INVENTORIES_RESPONSE
+        client = mock.MagicMock()
+        client.get.return_value = fake_response
+
+        rp1 = resource_provider.ResourceProvider("uuid1", "name1")
+        rp2 = resource_provider.ResourceProvider("uuid2", "name2")
+        mock_get_all.return_value = [rp1, rp2]
+
+        result = resource_provider.get_all_inventories(client)
+
+        mock_get_all.assert_called_once_with(client)
+        client.get.assert_called_with(
+            "/resource_providers/uuid2/inventories")
+        self.assertEqual(6, len(result))
+        disk1 = resource_provider.Inventory("uuid1", "DISK_GB", 10)
+        self.assertIn(disk1, result)
+        disk2 = resource_provider.Inventory("uuid2", "DISK_GB", 10)
+        self.assertIn(disk2, result)
