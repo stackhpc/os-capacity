@@ -25,7 +25,7 @@ def get_flavors(app):
     return [(f.id, f.name, f.vcpus, f.ram_mb, f.disk_gb) for f in raw_flavors]
 
 
-def get_resource_providers(app):
+def _get_resource_providers(app):
     app.LOG.debug("Getting resource providers")
     raw_rps = resource_provider.get_all(app.placement_client)
     return [(rp.uuid, rp.name) for rp in raw_rps]
@@ -80,7 +80,7 @@ def _get_allocations(app, rps):
 
 
 def get_allocation_list(app):
-    rps = get_resource_providers(app)
+    rps = _get_resource_providers(app)
     all_allocations = _get_allocations(app, rps)
     rp_dict = {uuid: name for uuid, name in rps}
     now = _get_now()
@@ -113,7 +113,7 @@ def get_allocation_list(app):
 
 
 def get_all_inventories_and_usage(app):
-    rps = get_resource_providers(app)
+    rps = _get_resource_providers(app)
     all_inventories = _get_inventories(app, rps)
     all_allocations = _get_allocations(app, rps)
 

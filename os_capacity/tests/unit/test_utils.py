@@ -154,7 +154,7 @@ class TestUtils(unittest.TestCase):
         app = mock.MagicMock()
         app.placement_client.get.return_value = fake_response
 
-        result = utils.get_resource_providers(app)
+        result = utils._get_resource_providers(app)
 
         app.placement_client.get.assert_called_once_with("/resource_providers")
         self.assertEqual([(fakes.RESOURCE_PROVIDER['uuid'], 'name1')], result)
@@ -188,7 +188,7 @@ class TestUtils(unittest.TestCase):
 
     @mock.patch.object(utils, '_get_allocations')
     @mock.patch.object(utils, '_get_inventories')
-    @mock.patch.object(utils, 'get_resource_providers')
+    @mock.patch.object(utils, '_get_resource_providers')
     def test_get_all_inventories_and_usage(self, mock_grp, mock_gi, mock_a):
         fake_rps = [('uuid1', 'name1'), ('uuid2', 'name2'),
                     ('uuid3', 'name3')]
