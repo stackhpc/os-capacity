@@ -54,7 +54,8 @@ class TestUtils(unittest.TestCase):
 
         result = utils.get_flavors(app)
 
-        expected_flavors = [('d0e9df0c-34a3-4283-9547-d873e4e86a41',
+        expected_flavors = [(
+            'd0e9df0c-34a3-4283-9547-d873e4e86a41',
             'compute-GPU', 8, 2048, 30)]
         self.assertEqual(expected_flavors, result)
 
@@ -111,9 +112,9 @@ class TestUtils(unittest.TestCase):
         app.placement_client.get.assert_called_with(
             "/resource_providers/uuid2/inventories")
         self.assertEqual({
-                'uuid1': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
-                'uuid2': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
-            }, result)
+            'uuid1': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
+            'uuid2': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
+        }, result)
 
     @mock.patch.object(utils, '_get_allocations')
     @mock.patch.object(utils, '_get_inventories')
@@ -130,7 +131,7 @@ class TestUtils(unittest.TestCase):
         mock_gi.return_value = fake_inventories
         fake_allocations = {
             'uuid1': {"server-uuid1": {
-                'DISK_GB': 371,'MEMORY_MB': 131072, 'VCPU': 64}},
+                'DISK_GB': 371, 'MEMORY_MB': 131072, 'VCPU': 64}},
             'uuid3': {},
         }
         mock_a.return_value = fake_allocations
@@ -138,10 +139,10 @@ class TestUtils(unittest.TestCase):
         result = list(utils.get_all_inventories_and_usage(mock.Mock()))
 
         self.assertEqual([
-                ('uuid1', 'name1', 30, 20, 10, True),
-                ('uuid2', 'name2', None, None, None, False),
-                ('uuid3', 'name3', 30, 20, 10, False),
-            ], result)
+            ('uuid1', 'name1', 30, 20, 10, True),
+            ('uuid2', 'name2', None, None, None, False),
+            ('uuid3', 'name3', 30, 20, 10, False),
+        ], result)
 
     def test_group_inventories(self):
         fake_all_inventories = [
@@ -158,8 +159,8 @@ class TestUtils(unittest.TestCase):
         result = list(utils.group_all_inventories(
             fake_all_inventories, fake_flavors))
 
-        self.assertEquals(2, len(result))
-        self.assertEquals([
+        self.assertEqual(2, len(result))
+        self.assertEqual([
             ('VCPU:30,MEMORY_MB:20,DISK_GB:10', 2, 1, 1, "test1, test2"),
             ('VCPU:0,MEMORY_MB:0,DISK_GB:0', 1, 0, 1, '')], result)
 
@@ -169,9 +170,9 @@ class TestUtils(unittest.TestCase):
             'allocations': {
                 'c1d70ef7-f26b-4147-bcf9-0fd91ddaf8f6': {
                     'resources': {
-                        'DISK_GB': 371,'MEMORY_MB': 131072, 'VCPU': 64}
+                        'DISK_GB': 371, 'MEMORY_MB': 131072, 'VCPU': 64}
                 },
-            'resource_provider_generation': 43}
+                'resource_provider_generation': 43}
         }
         fake_response = mock.MagicMock()
         fake_response.json.return_value = fake_allocations

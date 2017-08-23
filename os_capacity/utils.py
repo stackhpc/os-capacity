@@ -89,7 +89,7 @@ def group_all_inventories(all_inventories_and_usage, flavors):
         is_used = inventory[-1]
         counted_inventories[resource_key] += 1
         if is_used:
-            usage[resource_key] +=1
+            usage[resource_key] += 1
 
     # TODO(johngarbutt) this flavor grouping is very ironic specific
     grouped_flavors = collections.defaultdict(list)

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright (c) 2017 StackHPC Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,9 +13,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-#!/usr/bin/env python
 
-from setuptools import setup, find_packages
+from setuptools import find_packages
+from setuptools import setup
 
 
 PROJECT = 'os_capacity'

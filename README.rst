@@ -16,7 +16,7 @@ First lets get the code downloaded:
 
     git clone https://github.com/JohnGarbutt/os-capacity.git
     cd os-capacity
-    
+
 Now lets get that installed inside a virtual enviroment:
 
 .. code::
