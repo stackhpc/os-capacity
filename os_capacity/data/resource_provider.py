@@ -50,10 +50,11 @@ def get_inventories(placement_client, resource_provider):
     return inventories
 
 
-def get_all_inventories(placement_client):
-    inventories = []
-    resource_providers = get_all(placement_client)
+def get_all_inventories(placement_client, resource_providers=None):
+    if resource_providers is None:
+        resource_providers = get_all(placement_client)
 
+    inventories = []
     for resource_provider in resource_providers:
         inventories += get_inventories(placement_client, resource_provider)
 

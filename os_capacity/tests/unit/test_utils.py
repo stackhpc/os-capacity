@@ -87,32 +87,43 @@ class TestUtils(unittest.TestCase):
             'uuid2': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
         }, result)
 
-    @mock.patch.object(utils, '_get_allocations')
-    @mock.patch.object(utils, '_get_inventories')
-    @mock.patch.object(utils, '_get_resource_providers')
-    def test_get_all_inventories_and_usage(self, mock_grp, mock_gi, mock_a):
-        fake_rps = [('uuid1', 'name1'), ('uuid2', 'name2'),
-                    ('uuid3', 'name3')]
-        mock_grp.return_value = fake_rps
-        fake_inventories = {
-            'uuid1': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
-            'uuid2': {},
-            'uuid3': {'DISK_GB': 10, 'MEMORY_MB': 20, 'VCPU': 30},
-        }
-        mock_gi.return_value = fake_inventories
-        fake_allocations = {
-            'uuid1': {"server-uuid1": {
-                'DISK_GB': 371, 'MEMORY_MB': 131072, 'VCPU': 64}},
-            'uuid3': {},
-        }
-        mock_a.return_value = fake_allocations
+    @mock.patch.object(resource_provider, 'get_allocations')
+    @mock.patch.object(resource_provider, 'get_inventories')
+    @mock.patch.object(resource_provider, 'get_all')
+    def test_get_all_inventories_and_usage(self, mock_grp, mock_gi, mock_ga):
+        mock_grp.return_value = [
+            resource_provider.ResourceProvider('uuid1', 'name1'),
+            resource_provider.ResourceProvider('uuid2', 'name2'),
+            resource_provider.ResourceProvider('uuid3', 'name3')]
+        fake_r = [
+            resource_provider.ResourceClassAmount("CUSTOM_FOO", 3),
+            resource_provider.ResourceClassAmount("CUSTOM_BAR", 2),
+        ]
+        mock_ga.side_effect = [
+            [resource_provider.Allocation("uuid1", "consumer_uuid1", fake_r)],
+            [],
+            [resource_provider.Allocation("uuid1", "consumer_uuid2", fake_r)],
+        ]
+        mock_gi.side_effect = [
+            [resource_provider.Inventory("uuid1", "VCPU", 10),
+             resource_provider.Inventory("uuid1", "DISK_GB", 5)],
+            [],
+            [resource_provider.Inventory("uuid1", "VCPU", 10),
+             resource_provider.Inventory("uuid1", "DISK_GB", 6)],
+        ]
+        app = mock.Mock()
+        app.placement_client = "fake"
 
-        result = list(utils.get_all_inventories_and_usage(mock.Mock()))
+        result = list(utils.get_all_inventories_and_usage(app))
+
+        mock_grp.assert_called_once_with(app.placement_client)
+        self.assertEqual(3, mock_gi.call_count)
+        self.assertEqual(3, mock_ga.call_count)
 
         self.assertEqual([
-            ('uuid1', 'name1', 30, 20, 10, True),
-            ('uuid2', 'name2', None, None, None, False),
-            ('uuid3', 'name3', 30, 20, 10, False),
+            ('uuid1', 'name1', 'DISK_GB:5, VCPU:10', 'consumer_uuid1'),
+            ('uuid2', 'name2', '', ''),
+            ('uuid3', 'name3', 'DISK_GB:6, VCPU:10', 'consumer_uuid2'),
         ], result)
 
     def test_group_inventories(self):

@@ -35,8 +35,7 @@ class ListResourcesAll(Lister):
 
     def take_action(self, parsed_args):
         inventories = utils.get_all_inventories_and_usage(self.app)
-        return (('UUID', 'Name', 'VCPU', 'RAM MB', 'DISK GB', 'In Use'),
-                inventories)
+        return (('UUID', 'Name', 'Resources', 'Allocations'), inventories)
 
 
 class ListResourcesGroups(Lister):

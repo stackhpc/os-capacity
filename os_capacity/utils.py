@@ -105,18 +105,24 @@ def get_allocation_list(app):
 
 
 def get_all_inventories_and_usage(app):
-    rps = _get_resource_providers(app)
-    all_inventories = _get_inventories(app, rps)
-    all_allocations = _get_allocations(app, rps)
+    resource_providers = resource_provider.get_all(app.placement_client)
 
-    for rp_uuid, rp_name in rps:
-        rp_inventories = all_inventories[rp_uuid]
-        has_allocations = True if all_allocations.get(rp_uuid) else False
-        yield (rp_uuid, rp_name,
-               rp_inventories.get('VCPU'),
-               rp_inventories.get('MEMORY_MB'),
-               rp_inventories.get('DISK_GB'),
-               has_allocations)
+    for rp in resource_providers:
+        inventories = resource_provider.get_inventories(
+            app.placement_client, rp)
+        allocations = resource_provider.get_allocations(
+            app.placement_client, rp)
+
+        inventory_texts = ["%s:%s" % (i.resource_class, i.total)
+                           for i in inventories]
+        inventory_texts.sort()
+        inventory_text = ", ".join(inventory_texts)
+
+        allocation_texts = [a.consumer_uuid for a in allocations]
+        allocation_texts.sort()
+        allocation_text = ", ".join(allocation_texts)
+
+        yield (rp.uuid, rp.name, inventory_text, allocation_text)
 
 
 def group_all_inventories(all_inventories_and_usage, flavors):
