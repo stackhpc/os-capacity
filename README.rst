@@ -23,7 +23,7 @@ Now lets get that installed inside a virtual enviroment:
 
     virtualenv .venv-test
     source .venv-test/bin/activate
-    pip install .
+    pip install -U .
 
 Configuration
 -------------
