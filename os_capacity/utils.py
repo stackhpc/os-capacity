@@ -71,7 +71,7 @@ AllocationList = collections.namedtuple(
 
 def get_allocation_list(app):
     """Get allocations, add in server and resource provider details."""
-    resource_providers = resource_provider.get_all(app.placenment_client)
+    resource_providers = resource_provider.get_all(app.placement_client)
     rp_dict = {rp.uuid: rp.name for rp in resource_providers}
 
     all_allocations = resource_provider.get_all_allocations(

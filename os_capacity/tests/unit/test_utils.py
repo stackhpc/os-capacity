@@ -195,6 +195,7 @@ class TestUtils(unittest.TestCase):
 
         result = utils.get_allocation_list(app)
 
+        mock_rps.assert_called_once_with(app.placement_client)
         self.assertEqual(2, len(result))
         expected1 = utils.AllocationList('name1', 'consumer_uuid2',
             'DISK_GB:10, MEMORY_MB:20, VCPU:30',
