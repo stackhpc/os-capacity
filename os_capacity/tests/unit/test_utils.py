@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
 import mock
 import unittest
 
@@ -48,6 +49,107 @@ FAKE_ALLOCATIONS_RESPONSE = {
     'allocations': FAKE_ALLOCATIONS,
     'resource_provider_generation': 43,
 }
+
+FAKE_SERVER = {
+    "OS-DCF:diskConfig": "AUTO",
+    "OS-EXT-AZ:availability_zone": "nova",
+    "OS-EXT-SRV-ATTR:host": "compute",
+    "OS-EXT-SRV-ATTR:hostname": "new-server-test",
+    "OS-EXT-SRV-ATTR:hypervisor_hostname": "fake-mini",
+    "OS-EXT-SRV-ATTR:instance_name": "instance-00000001",
+    "OS-EXT-SRV-ATTR:kernel_id": "",
+    "OS-EXT-SRV-ATTR:launch_index": 0,
+    "OS-EXT-SRV-ATTR:ramdisk_id": "",
+    "OS-EXT-SRV-ATTR:reservation_id": "r-ov3q80zj",
+    "OS-EXT-SRV-ATTR:root_device_name": "/dev/sda",
+    "OS-EXT-SRV-ATTR:user_data": "",
+    "OS-EXT-STS:power_state": 1,
+    "OS-EXT-STS:task_state": None,
+    "OS-EXT-STS:vm_state": "active",
+    "OS-SRV-USG:launched_at": "2017-02-14T19:23:59.895661",
+    "OS-SRV-USG:terminated_at": None,
+    "accessIPv4": "1.2.3.4",
+    "accessIPv6": "80fe::",
+    "addresses": {
+        "private": [
+            {
+                "OS-EXT-IPS-MAC:mac_addr": "aa:bb:cc:dd:ee:ff",
+                "OS-EXT-IPS:type": "fixed",
+                "addr": "192.168.0.3",
+                "version": 4
+            }
+        ]
+    },
+    "config_drive": "",
+    "created": "2017-02-14T19:23:58Z",
+    "description": "fake description",
+    "flavor": {
+        "disk": 1,
+        "ephemeral": 0,
+        "extra_specs": {
+            "hw:cpu_model": "SandyBridge",
+            "hw:mem_page_size": "2048",
+            "hw:cpu_policy": "dedicated"
+        },
+        "original_name": "m1.tiny.specs",
+        "ram": 512,
+        "swap": 0,
+        "vcpus": 1
+    },
+    "hostId": "2091634baaccdc4c5a1d57069c833e402921df696b7f970791b12ec6",
+    "host_status": "UP",
+    "id": "9168b536-cd40-4630-b43f-b259807c6e87",
+    "image": {
+        "id": "70a599e0-31e7-49b7-b260-868f441e862b",
+        "links": [
+            {
+                "href": "http://openstack.example.com"
+                        "/images/70a599e0-31e7-49b7-b260-868f441e862b",
+                "rel": "bookmark"
+            }
+        ]
+    },
+    "key_name": None,
+    "links": [
+        {
+            "href": "http://openstack.example.com/v2.1/servers"
+                    "/9168b536-cd40-4630-b43f-b259807c6e87",
+            "rel": "self"
+        },
+        {
+            "href": "http://openstack.example.com/servers"
+                    "/9168b536-cd40-4630-b43f-b259807c6e87",
+            "rel": "bookmark"
+        }
+    ],
+    "locked": False,
+    "metadata": {
+        "My Server Name": "Apache1"
+    },
+    "name": "new-server-test",
+    "os-extended-volumes:volumes_attached": [
+        {
+            "delete_on_termination": False,
+            "id": "volume_id1"
+        },
+        {
+            "delete_on_termination": False,
+            "id": "volume_id2"
+        }
+    ],
+    "progress": 0,
+    "security_groups": [
+        {
+            "name": "default"
+        }
+    ],
+    "status": "ACTIVE",
+    "tags": [],
+    "tenant_id": "6f70656e737461636b20342065766572",
+    "updated": "2017-02-14T19:24:00Z",
+    "user_id": "fake"
+}
+FAKE_SERVER_RESPONSE = {'server': FAKE_SERVER}
 
 
 class TestUtils(unittest.TestCase):
@@ -190,12 +292,36 @@ class TestUtils(unittest.TestCase):
             "/resource_providers/uuid1/allocations")
         self.assertEqual({'uuid1': FAKE_ALLOCATIONS}, result)
 
-    def test_get_allocation_list(self):
+    def test_get_server(self):
+        server_uuid = FAKE_SERVER['id']
+        fake_response = mock.MagicMock()
+        fake_response.json.return_value = FAKE_SERVER_RESPONSE
+        app = mock.MagicMock()
+        app.compute_client.get.return_value = fake_response
+
+        result = utils._get_server(app, server_uuid)
+
+        app.compute_client.get.assert_called_once_with(
+            "/servers/%s" % server_uuid)
+        self.assertEqual(5, len(result))
+        self.assertEqual(server_uuid, result['uuid'])
+        self.assertEqual(FAKE_SERVER['name'], result['name'])
+        self.assertEqual(FAKE_SERVER['user_id'], result['user_id'])
+        self.assertEqual(FAKE_SERVER['tenant_id'], result['project_id'])
+
+    @mock.patch.object(utils, '_get_now')
+    def test_get_allocation_list(self, mock_now):
         fake_response = mock.MagicMock()
         fake_response.json.side_effect = [
             FAKE_RP_RESPONSE, FAKE_ALLOCATIONS_RESPONSE]
         app = mock.MagicMock()
         app.placement_client.get.return_value = fake_response
+
+        fake_compute_response = mock.MagicMock()
+        fake_compute_response.json.return_value = FAKE_SERVER_RESPONSE
+        app.compute_client.get.return_value = fake_compute_response
+
+        mock_now.return_value = datetime.datetime(2017, 3, 1)
 
         result = utils.get_allocation_list(app)
 
@@ -204,5 +330,6 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(1, len(result))
         expected = (
             FAKE_RP['name'], FAKE_ALLOCATIONS.keys()[0],
-            'DISK_GB:371, MEMORY_MB:131072, VCPU:64')
+            'DISK_GB:371, MEMORY_MB:131072, VCPU:64',
+            14, FAKE_SERVER['tenant_id'], FAKE_SERVER['user_id'])
         self.assertEqual(expected, result[0])

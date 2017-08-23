@@ -72,4 +72,6 @@ class ListUsagesAll(Lister):
 
     def take_action(self, parsed_args):
         allocations = utils.get_allocation_list(self.app)
-        return (('Provider Name', 'Server UUID', 'Resources'), allocations)
+        return (
+            ('Provider Name', 'Server UUID', 'Resources',
+             'Days', 'Project', 'User'), allocations)

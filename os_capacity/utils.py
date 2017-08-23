@@ -13,7 +13,7 @@
 # under the License.
 
 import collections
-
+from datetime import datetime
 
 def get_capacity():
     return [{"flavor": "foo", "count": 1}]
@@ -51,6 +51,24 @@ def _get_inventories(app, rps):
     return inventories
 
 
+def _get_now():
+    # To make it easy to mock in tests
+    return datetime.now()
+
+
+def _get_server(app, uuid):
+    client = app.compute_client
+    url = "/servers/%s" % uuid
+    raw_server = client.get(url).json()['server']
+    return {
+        "uuid": raw_server['id'],
+        "name": raw_server['name'],
+        "created": datetime.strptime(
+            raw_server['created'], "%Y-%m-%dT%H:%M:%SZ"),
+        "user_id": raw_server['user_id'],
+        "project_id": raw_server['tenant_id'],
+    }
+
 def _get_allocations(app, rps):
     app.LOG.debug("Getting all allocations")
     client = app.placement_client
@@ -67,16 +85,27 @@ def get_allocation_list(app):
     rps = get_resource_providers(app)
     all_allocations = _get_allocations(app, rps)
     rp_dict = {uuid: name for uuid, name in rps}
+    now = _get_now()
 
     allocation_list = []
     for rp_uuid in all_allocations.keys():
         for server_uuid in all_allocations[rp_uuid].keys():
+            rp_name = rp_dict[rp_uuid]
             usage_amounts = all_allocations[rp_uuid][server_uuid]['resources']
             usage_amounts = ["%s:%s" % i for i in usage_amounts.items()]
             usage_amounts.sort()
             usage_text = ", ".join(usage_amounts)
-            rp_name = rp_dict[rp_uuid]
-            allocation_list.append((rp_name, server_uuid, usage_text))
+
+            server = _get_server(app, server_uuid)
+            user = server['user_id']
+            project = server['project_id']
+            created = server['created']
+            delta = now - created
+            days_running = delta.days
+
+            allocation_list.append((
+                rp_name, server_uuid, usage_text,
+                days_running, project, user, ))
 
     return allocation_list
 
