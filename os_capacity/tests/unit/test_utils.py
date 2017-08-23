@@ -16,6 +16,7 @@ import datetime
 import mock
 import unittest
 
+from os_capacity.data import flavors
 from os_capacity import utils
 
 FAKE_RP = {
@@ -154,36 +155,16 @@ FAKE_SERVER_RESPONSE = {'server': FAKE_SERVER}
 
 class TestUtils(unittest.TestCase):
 
-    def test_get_flavors(self):
-        fake_flavor = {
-            'OS-FLV-DISABLED:disabled': False,
-            'OS-FLV-EXT-DATA:ephemeral': 0,
-            'disk': 30,
-            'id': 'd0e9df0c-34a3-4283-9547-d873e4e86a41',
-            'links': [
-                {'href': 'http://example.com:8774/v2.1/flavors/'
-                         'd0e9df0c-34a3-4283-9547-d873e4e86a41',
-                 'rel': 'self'},
-                {'href': 'http://10.60.253.1:8774/flavors/'
-                         'd0e9df0c-34a3-4283-9547-d873e4e86a41',
-                 'rel': 'bookmark'}],
-            'name': 'compute-GPU',
-            'os-flavor-access:is_public': True,
-            'ram': 2048,
-            'rxtx_factor': 1.0,
-            'swap': '',
-            'vcpus': 8,
-        }
-        fake_response = mock.MagicMock()
-        fake_response.json.return_value = {'flavors': [fake_flavor]}
-        app = mock.MagicMock()
-        app.compute_client.get.return_value = fake_response
+    @mock.patch.object(flavors, "get_all")
+    def test_get_flavors(self, mock_flavors):
+        mock_flavors.return_value = [flavors.Flavor(
+            id="id", name="name", vcpus=1, ram_mb=2, disk_gb=3)]
+        app = mock.Mock()
 
         result = utils.get_flavors(app)
 
-        expected_flavors = [(
-            'd0e9df0c-34a3-4283-9547-d873e4e86a41',
-            'compute-GPU', 8, 2048, 30)]
+        mock_flavors.assert_called_once_with(app.compute_client)
+        expected_flavors = [('id', 'name', 1, 2, 3)]
         self.assertEqual(expected_flavors, result)
 
     def test_get_resource_providers(self):

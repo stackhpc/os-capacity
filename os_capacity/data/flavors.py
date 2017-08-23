@@ -14,8 +14,10 @@
 
 import collections
 
+
 Flavor = collections.namedtuple(
     "Flavor", ("id", "name", "vcpus", "ram_mb", "disk_gb"))
+
 
 def get_all(compute_client):
     response = compute_client.get("/flavors/detail").json()

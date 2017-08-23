@@ -29,5 +29,6 @@ class TestFlavor(unittest.TestCase):
 
         result = flavors.get_all(compute_client)
 
+        compute_client.get.assert_called_once_with("/flavors/detail")
         expected_flavors = [(fakes.FLAVOR['id'], 'compute-GPU', 8, 2048, 30)]
         self.assertEqual(expected_flavors, result)
