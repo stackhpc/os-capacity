@@ -84,7 +84,7 @@ FAKE_SERVER = {
     "created": "2017-02-14T19:23:58Z",
     "description": "fake description",
     "flavor": {
-        "disk": 1,
+        "id": "7b46326c-ce48-4e43-8aca-4f5ca00d5f37",
         "ephemeral": 0,
         "extra_specs": {
             "hw:cpu_model": "SandyBridge",
@@ -303,11 +303,12 @@ class TestUtils(unittest.TestCase):
 
         app.compute_client.get.assert_called_once_with(
             "/servers/%s" % server_uuid)
-        self.assertEqual(5, len(result))
+        self.assertEqual(6, len(result))
         self.assertEqual(server_uuid, result['uuid'])
         self.assertEqual(FAKE_SERVER['name'], result['name'])
         self.assertEqual(FAKE_SERVER['user_id'], result['user_id'])
         self.assertEqual(FAKE_SERVER['tenant_id'], result['project_id'])
+        self.assertEqual(FAKE_SERVER['flavor']['id'], result['flavor_id'])
 
     @mock.patch.object(utils, '_get_now')
     def test_get_allocation_list(self, mock_now):
@@ -331,5 +332,6 @@ class TestUtils(unittest.TestCase):
         expected = (
             FAKE_RP['name'], FAKE_ALLOCATIONS.keys()[0],
             'DISK_GB:371, MEMORY_MB:131072, VCPU:64',
-            14, FAKE_SERVER['tenant_id'], FAKE_SERVER['user_id'])
+            FAKE_SERVER['flavor']['id'], 14,
+            FAKE_SERVER['tenant_id'], FAKE_SERVER['user_id'])
         self.assertEqual(expected, result[0])

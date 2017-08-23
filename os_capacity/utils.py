@@ -68,6 +68,8 @@ def _get_server(app, uuid):
             raw_server['created'], "%Y-%m-%dT%H:%M:%SZ"),
         "user_id": raw_server['user_id'],
         "project_id": raw_server['tenant_id'],
+        "project_id": raw_server['tenant_id'],
+        "flavor_id": raw_server['flavor'].get('id'),
     }
 
 
@@ -102,15 +104,16 @@ def get_allocation_list(app):
             user = server['user_id']
             project = server['project_id']
             created = server['created']
+            flavor = server['flavor_id']
             delta = now - created
             days_running = delta.days
 
             allocation_list.append((
                 rp_name, server_uuid, usage_text,
-                days_running, project, user))
+                flavor, days_running, project, user))
 
-    # Order by project, then user, then most days, then usage
-    allocation_list.sort(key=lambda x: (x[4], x[5], x[3] * -1, x[2]))
+    # Order by project, then user, then most days, then flavor
+    allocation_list.sort(key=lambda x: (x[5], x[6], x[4] * -1, x[3]))
 
     return allocation_list
 

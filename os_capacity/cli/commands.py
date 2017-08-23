@@ -74,4 +74,4 @@ class ListUsagesAll(Lister):
         allocations = utils.get_allocation_list(self.app)
         return (
             ('Provider Name', 'Server UUID', 'Resources',
-             'Days', 'Project', 'User'), allocations)
+             'Flavor', 'Days', 'Project', 'User'), allocations)
