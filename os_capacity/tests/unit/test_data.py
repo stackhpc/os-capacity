@@ -12,11 +12,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
 import mock
 import unittest
 
 from os_capacity.data import flavors
 from os_capacity.data import resource_provider
+from os_capacity.data import server
 from os_capacity.tests.unit import fakes
 
 
@@ -137,3 +139,28 @@ class TestAllocations(unittest.TestCase):
         disk2 = resource_provider.Allocation(
             "uuid2", "consumer_uuid", "DISK_GB", 10)
         self.assertIn(disk2, result)
+
+
+class TestServer(unittest.TestCase):
+    def test_parse_created(self):
+        result = server._parse_created("2017-02-14T19:23:58Z")
+        expected = datetime.datetime(2017, 2, 14, 19, 23, 58)
+        self.assertEqual(expected, result)
+
+    def test_get(self):
+        mock_response = mock.Mock()
+        mock_response.json.return_value = fakes.SERVER_RESPONSE
+        compute_client = mock.Mock()
+        compute_client.get.return_value = mock_response
+
+        uuid = '9168b536-cd40-4630-b43f-b259807c6e87'
+        result = server.get(compute_client, uuid)
+
+        expected = server.Server(
+            uuid=uuid,
+            name='new-server-test',
+            created=datetime.datetime(2017, 2, 14, 19, 23, 58),
+            user_id='fake',
+            project_id='6f70656e737461636b20342065766572',
+            flavor_id='7b46326c-ce48-4e43-8aca-4f5ca00d5f37')
+        self.assertEqual(expected, result)
