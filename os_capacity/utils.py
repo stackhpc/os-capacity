@@ -17,6 +17,7 @@ from datetime import datetime
 
 from os_capacity.data import flavors
 from os_capacity.data import resource_provider
+from os_capacity.data import server as server_data
 
 
 def get_flavors(app):
@@ -51,22 +52,6 @@ def _get_now():
     return datetime.now()
 
 
-def _get_server(app, uuid):
-    client = app.compute_client
-    url = "/servers/%s" % uuid
-    raw_server = client.get(url).json()['server']
-    return {
-        "uuid": raw_server['id'],
-        "name": raw_server['name'],
-        "created": datetime.strptime(
-            raw_server['created'], "%Y-%m-%dT%H:%M:%SZ"),
-        "user_id": raw_server['user_id'],
-        "project_id": raw_server['tenant_id'],
-        "project_id": raw_server['tenant_id'],
-        "flavor_id": raw_server['flavor'].get('id'),
-    }
-
-
 def _get_allocations(app, rps):
     app.LOG.debug("Getting all allocations")
     client = app.placement_client
@@ -94,17 +79,14 @@ def get_allocation_list(app):
             usage_amounts.sort()
             usage_text = ", ".join(usage_amounts)
 
-            server = _get_server(app, server_uuid)
-            user = server['user_id']
-            project = server['project_id']
-            created = server['created']
-            flavor = server['flavor_id']
-            delta = now - created
+            server = server_data.get(app.compute_client, server_uuid)
+            delta = now - server.created
             days_running = delta.days
 
             allocation_list.append((
                 rp_name, server_uuid, usage_text,
-                flavor, days_running, project, user))
+                server.flavor_id, days_running, server.project_id,
+                server.user_id))
 
     # Order by project, then user, then most days, then flavor
     allocation_list.sort(key=lambda x: (x[5], x[6], x[4] * -1, x[3]))
