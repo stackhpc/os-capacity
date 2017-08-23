@@ -65,3 +65,11 @@ class ListResourcesGroups(Lister):
         return (
             ('Resource Class Groups', 'Total', 'Used', 'Free', 'Flavors'),
             groups)
+
+
+class ListUsagesAll(Lister):
+    """List all current resource usages."""
+
+    def take_action(self, parsed_args):
+        allocations = utils.get_allocation_list(self.app)
+        return (('Provider UUID', 'Server UUID', 'Resources'), allocations)

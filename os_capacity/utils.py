@@ -63,6 +63,21 @@ def _get_allocations(app, rps):
     return allocations_by_rp
 
 
+def get_allocation_list(app):
+    rps = get_resource_providers(app)
+    all_allocations = _get_allocations(app, rps)
+
+    allocation_list = []
+    for rp_uuid in all_allocations.keys():
+        for server_uuid in all_allocations[rp_uuid].keys():
+            usage_amounts = all_allocations[rp_uuid][server_uuid]['resources']
+            usage_amounts = ["%s:%s" % i for i in usage_amounts.items()]
+            usage_text = ", ".join(usage_amounts)
+            allocation_list.append((rp_uuid, server_uuid, usage_text))
+
+    return allocation_list
+
+
 def get_all_inventories_and_usage(app):
     rps = get_resource_providers(app)
     all_inventories = _get_inventories(app, rps)
