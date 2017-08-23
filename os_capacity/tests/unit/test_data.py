@@ -108,16 +108,13 @@ class TestAllocations(unittest.TestCase):
 
         result = resource_provider.get_allocations(client, rp)
 
-        self.assertEqual(3, len(result))
-        disk = resource_provider.Allocation(
-            "uuid", "consumer_uuid", "DISK_GB", 10)
-        self.assertIn(disk, result)
-        mem = resource_provider.Allocation(
-            "uuid", "consumer_uuid", "MEMORY_MB", 20)
-        self.assertIn(mem, result)
-        vcpu = resource_provider.Allocation(
-            "uuid", "consumer_uuid", "VCPU", 30)
-        self.assertIn(vcpu, result)
+        self.assertEqual(1, len(result))
+        expected = resource_provider.Allocation(
+            "uuid", "consumer_uuid", [
+                resource_provider.ResourceClassAmount("DISK_GB", 10),
+                resource_provider.ResourceClassAmount("MEMORY_MB", 20),
+                resource_provider.ResourceClassAmount("VCPU", 30)])
+        self.assertEqual(expected, result[0])
 
     @mock.patch.object(resource_provider, 'get_all')
     def test_get_all_allocations(self, mock_get_all):
@@ -132,13 +129,19 @@ class TestAllocations(unittest.TestCase):
 
         result = resource_provider.get_all_allocations(client)
 
-        self.assertEqual(6, len(result))
-        disk1 = resource_provider.Allocation(
-            "uuid1", "consumer_uuid", "DISK_GB", 10)
-        self.assertIn(disk1, result)
-        disk2 = resource_provider.Allocation(
-            "uuid2", "consumer_uuid", "DISK_GB", 10)
-        self.assertIn(disk2, result)
+        self.assertEqual(2, len(result))
+        uuid1 = resource_provider.Allocation(
+            "uuid1", "consumer_uuid", [
+                resource_provider.ResourceClassAmount("DISK_GB", 10),
+                resource_provider.ResourceClassAmount("MEMORY_MB", 20),
+                resource_provider.ResourceClassAmount("VCPU", 30)])
+        self.assertIn(uuid1, result)
+        uuid2 = resource_provider.Allocation(
+            "uuid1", "consumer_uuid", [
+                resource_provider.ResourceClassAmount("DISK_GB", 10),
+                resource_provider.ResourceClassAmount("MEMORY_MB", 20),
+                resource_provider.ResourceClassAmount("VCPU", 30)])
+        self.assertIn(uuid2, result)
 
 
 class TestServer(unittest.TestCase):
