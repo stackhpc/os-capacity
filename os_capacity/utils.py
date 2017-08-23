@@ -15,14 +15,13 @@
 import collections
 from datetime import datetime
 
+from os_capacity.data import flavors
+
 
 def get_flavors(app):
     app.LOG.debug("Getting flavors")
-    client = app.compute_client
-    response = client.get("/flavors/detail").json()
-    raw_flavors = response['flavors']
-    return [(f['id'], f['name'], f['vcpus'], f['ram'], f['disk'])
-            for f in raw_flavors]
+    raw_flavors = flavors.get_all(app.compute_client)
+    return [(f.id, f.name, f.vcpus, f.ram_mb, f.disk_gb) for f in raw_flavors]
 
 
 def get_resource_providers(app):
