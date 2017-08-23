@@ -16,6 +16,7 @@ import collections
 from datetime import datetime
 
 from os_capacity.data import flavors
+from os_capacity.data import resource_provider
 
 
 def get_flavors(app):
@@ -26,10 +27,8 @@ def get_flavors(app):
 
 def get_resource_providers(app):
     app.LOG.debug("Getting resource providers")
-    client = app.placement_client
-    response = client.get("/resource_providers").json()
-    raw_rps = response['resource_providers']
-    return [(f['uuid'], f['name']) for f in raw_rps]
+    raw_rps = resource_provider.get_all(app.placement_client)
+    return [(rp.uuid, rp.name) for rp in raw_rps]
 
 
 def _get_inventories(app, rps):

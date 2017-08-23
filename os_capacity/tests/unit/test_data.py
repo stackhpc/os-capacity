@@ -16,6 +16,7 @@ import mock
 import unittest
 
 from os_capacity.data import flavors
+from os_capacity.data import resource_provider
 from os_capacity.tests.unit import fakes
 
 
@@ -32,3 +33,17 @@ class TestFlavor(unittest.TestCase):
         compute_client.get.assert_called_once_with("/flavors/detail")
         expected_flavors = [(fakes.FLAVOR['id'], 'compute-GPU', 8, 2048, 30)]
         self.assertEqual(expected_flavors, result)
+
+
+class TestResourceProvider(unittest.TestCase):
+
+    def test_get_all(self):
+        fake_response = mock.MagicMock()
+        fake_response.json.return_value = fakes.RESOURCE_PROVIDER_RESPONSE
+        placement_client = mock.MagicMock()
+        placement_client.get.return_value = fake_response
+
+        result = resource_provider.get_all(placement_client)
+
+        placement_client.get.assert_called_once_with("/resource_providers")
+        self.assertEqual([(fakes.RESOURCE_PROVIDER['uuid'], 'name1')], result)

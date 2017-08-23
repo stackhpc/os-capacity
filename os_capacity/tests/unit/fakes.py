@@ -32,3 +32,24 @@ FLAVOR = {
     'vcpus': 8,
 }
 FLAVOR_RESPONSE = {'flavors': [FLAVOR]}
+
+RESOURCE_PROVIDER = {
+    'generation': 6,
+    'name': 'name1',
+    'uuid': '97585d53-67a6-4e9d-9fe7-cd75b331b17b',
+    'links': [
+        {'href': '/resource_providers'
+                 '/97585d53-67a6-4e9d-9fe7-cd75b331b17c',
+         'rel': 'self'},
+        {'href': '/resource_providers'
+                 '/97585d53-67a6-4e9d-9fe7-cd75b331b17c/aggregates',
+         'rel': 'aggregates'},
+        {'href': '/resource_providers'
+                 '/97585d53-67a6-4e9d-9fe7-cd75b331b17c/inventories',
+         'rel': 'inventories'},
+        {'href': '/resource_providers'
+                 '/97585d53-67a6-4e9d-9fe7-cd75b331b17c/usages',
+         'rel': 'usages'}
+    ]
+}
+RESOURCE_PROVIDER_RESPONSE = {'resource_providers': [RESOURCE_PROVIDER]}
