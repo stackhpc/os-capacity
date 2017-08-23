@@ -15,6 +15,7 @@
 import collections
 from datetime import datetime
 
+
 def get_capacity():
     return [{"flavor": "foo", "count": 1}]
 
@@ -69,6 +70,7 @@ def _get_server(app, uuid):
         "project_id": raw_server['tenant_id'],
     }
 
+
 def _get_allocations(app, rps):
     app.LOG.debug("Getting all allocations")
     client = app.placement_client
@@ -105,7 +107,10 @@ def get_allocation_list(app):
 
             allocation_list.append((
                 rp_name, server_uuid, usage_text,
-                days_running, project, user, ))
+                days_running, project, user))
+
+    # Order by project, then user, then most days, then usage
+    allocation_list.sort(key=lambda x: (x[4], x[5], x[3] * -1, x[2]))
 
     return allocation_list
 
