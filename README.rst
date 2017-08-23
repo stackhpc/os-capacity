@@ -73,11 +73,12 @@ You can do things like list all flavors:
     | 45de641c-950e-434b-9c2e-6f76b120f85c | my-flavor-2 |     2 |   1024 |      40 |
     +--------------------------------------+-------------+-------+--------+---------+
 
-If you want to see all the REST API calls made, use the verbose flag:
+If you want to see all the REST API calls made, use the verbose flag, and you
+can also get the output in json format by adding the format flag:
 
 .. code::
 
-    (.venv-test) $ os-capacity -v flavor list
+    (.venv-test) $ os-capacity -v flavor list -f json
 
 You can look at all the different types of servers and capacity used:
 
