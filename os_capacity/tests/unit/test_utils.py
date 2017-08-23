@@ -203,6 +203,6 @@ class TestUtils(unittest.TestCase):
             "/resource_providers/%s/allocations" % FAKE_RP['uuid'])
         self.assertEqual(1, len(result))
         expected = (
-            FAKE_RP['uuid'], FAKE_ALLOCATIONS.keys()[0],
-            'VCPU:64, DISK_GB:371, MEMORY_MB:131072')
+            FAKE_RP['name'], FAKE_ALLOCATIONS.keys()[0],
+            'DISK_GB:371, MEMORY_MB:131072, VCPU:64')
         self.assertEqual(expected, result[0])

@@ -66,14 +66,17 @@ def _get_allocations(app, rps):
 def get_allocation_list(app):
     rps = get_resource_providers(app)
     all_allocations = _get_allocations(app, rps)
+    rp_dict = {uuid: name for uuid, name in rps}
 
     allocation_list = []
     for rp_uuid in all_allocations.keys():
         for server_uuid in all_allocations[rp_uuid].keys():
             usage_amounts = all_allocations[rp_uuid][server_uuid]['resources']
             usage_amounts = ["%s:%s" % i for i in usage_amounts.items()]
+            usage_amounts.sort()
             usage_text = ", ".join(usage_amounts)
-            allocation_list.append((rp_uuid, server_uuid, usage_text))
+            rp_name = rp_dict[rp_uuid]
+            allocation_list.append((rp_name, server_uuid, usage_text))
 
     return allocation_list
 
