@@ -154,13 +154,6 @@ FAKE_SERVER_RESPONSE = {'server': FAKE_SERVER}
 
 class TestUtils(unittest.TestCase):
 
-    def test_get_capacity(self):
-        result = utils.get_capacity()
-        self.assertEqual(1, len(result))
-        self.assertEqual(2, len(result[0]))
-        self.assertEqual("foo", result[0]["flavor"])
-        self.assertEqual(1, result[0]["count"])
-
     def test_get_flavors(self):
         fake_flavor = {
             'OS-FLV-DISABLED:disabled': False,

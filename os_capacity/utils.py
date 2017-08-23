@@ -16,10 +16,6 @@ import collections
 from datetime import datetime
 
 
-def get_capacity():
-    return [{"flavor": "foo", "count": 1}]
-
-
 def get_flavors(app):
     app.LOG.debug("Getting flavors")
     client = app.compute_client

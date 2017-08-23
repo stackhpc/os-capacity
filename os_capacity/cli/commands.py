@@ -20,22 +20,6 @@ from cliff.lister import Lister
 from os_capacity import utils
 
 
-class CapacityGet(Lister):
-    """Show a list of files in the current directory.
-
-    The file name and size are printed by default.
-    """
-
-    log = logging.getLogger(__name__)
-
-    def take_action(self, parsed_args):
-        capacity = utils.get_capacity()
-        return (
-            ('Flavor', 'Count'),
-            ((entry["flavor"], entry["count"]) for entry in capacity)
-        )
-
-
 class FlavorList(Lister):
     """List all the flavors."""
 
