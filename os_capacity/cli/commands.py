@@ -31,11 +31,11 @@ class FlavorList(Lister):
 
 
 class ListResourcesAll(Lister):
-    """List all cloud resources."""
+    """List all resource providers, with their resources and allocations."""
 
     def take_action(self, parsed_args):
         inventories = utils.get_all_inventories_and_usage(self.app)
-        return (('UUID', 'Name', 'Resources', 'Allocations'), inventories)
+        return (('Provider Name', 'Resources', 'Allocations'), inventories)
 
 
 class ListResourcesGroups(Lister):

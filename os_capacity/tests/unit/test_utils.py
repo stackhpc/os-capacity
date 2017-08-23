@@ -121,9 +121,9 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(3, mock_ga.call_count)
 
         self.assertEqual([
-            ('uuid1', 'name1', 'DISK_GB:5, VCPU:10', 'consumer_uuid1'),
-            ('uuid2', 'name2', '', ''),
-            ('uuid3', 'name3', 'DISK_GB:6, VCPU:10', 'consumer_uuid2'),
+            ('name1', 'DISK_GB:5, VCPU:10', 'consumer_uuid1'),
+            ('name2', '', ''),
+            ('name3', 'DISK_GB:6, VCPU:10', 'consumer_uuid2'),
         ], result)
 
     def test_group_inventories(self):

@@ -122,7 +122,7 @@ def get_all_inventories_and_usage(app):
         allocation_texts.sort()
         allocation_text = ", ".join(allocation_texts)
 
-        yield (rp.uuid, rp.name, inventory_text, allocation_text)
+        yield (rp.name, inventory_text, allocation_text)
 
 
 def group_all_inventories(all_inventories_and_usage, flavors):
