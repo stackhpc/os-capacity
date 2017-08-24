@@ -185,11 +185,11 @@ class TestUtils(unittest.TestCase):
         ]
         mock_server.side_effect = [
             server.Server("consumer_uuid2", "name",
-                datetime.datetime(2017, 3, 1),
-                "user_id", "project_id", "flavor"),
+                          datetime.datetime(2017, 3, 1),
+                          "user_id", "project_id", "flavor"),
             server.Server("consumer_uuid2", "name",
-                datetime.datetime(2017, 3, 1),
-                "user_id", "project_id", "flavor"),
+                          datetime.datetime(2017, 3, 1),
+                          "user_id", "project_id", "flavor"),
         ]
         app = mock.Mock()
 
@@ -197,11 +197,13 @@ class TestUtils(unittest.TestCase):
 
         mock_rps.assert_called_once_with(app.placement_client)
         self.assertEqual(2, len(result))
-        expected1 = utils.AllocationList('name1', 'consumer_uuid2',
+        expected1 = utils.AllocationList(
+            'name1', 'consumer_uuid2',
             'DISK_GB:10, MEMORY_MB:20, VCPU:30',
             'flavor', 1, 'project_id', 'user_id')
         self.assertEqual(expected1, result[0])
-        expected2 = utils.AllocationList('name2', 'consumer_uuid1',
-             'DISK_GB:10, MEMORY_MB:20, VCPU:30',
-             'flavor', 1, 'project_id', 'user_id')
+        expected2 = utils.AllocationList(
+            'name2', 'consumer_uuid1',
+            'DISK_GB:10, MEMORY_MB:20, VCPU:30',
+            'flavor', 1, 'project_id', 'user_id')
         self.assertEqual(expected2, result[1])
