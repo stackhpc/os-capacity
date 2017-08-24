@@ -56,6 +56,7 @@ setup(
             'resources_group = os_capacity.commands'
             '.commands:ListResourcesGroups',
             'usages_all = os_capacity.commands.commands:ListUsagesAll',
+            'usages_group = os_capacity.commands.commands:ListUsagesGroup',
         ],
     },
 )

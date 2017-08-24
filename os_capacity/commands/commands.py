@@ -56,3 +56,11 @@ class ListUsagesAll(Lister):
         return (
             ('Provider Name', 'Server UUID', 'Resources',
              'Flavor', 'Days', 'Project', 'User'), allocations)
+
+
+class ListUsagesGroup(Lister):
+    """Group usage by user_id."""
+
+    def take_action(self, parsed_args):
+        usages = utils.group_usage(self.app)
+        return (('User', 'Current Usage'), usages)

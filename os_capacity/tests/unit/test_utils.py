@@ -171,3 +171,31 @@ class TestUtils(unittest.TestCase):
             'DISK_GB:10, MEMORY_MB:20, VCPU:30',
             'flavor', 1, 'project_id', 'user_id')
         self.assertEqual(expected2, result[1])
+
+    @mock.patch.object(utils, "get_allocations_with_server_info")
+    def test_group_usage(self, mock_get_allocations):
+        fake_usage = [
+            resource_provider.ResourceClassAmount("DISK_GB", 10),
+            resource_provider.ResourceClassAmount("MEMORY_MB", 20),
+            resource_provider.ResourceClassAmount("VCPU", 30),
+        ]
+        mock_get_allocations.return_value = [
+            utils.AllocationList(
+                'name1', 'consumer_uuid2', fake_usage,
+                'flavor', 1, 'project_id', 'user_id1'),
+            utils.AllocationList(
+                'name2', 'consumer_uuid1', fake_usage,
+                'flavor', 1, 'project_id', 'user_id1'),
+            utils.AllocationList(
+                'name2', 'consumer_uuid1', fake_usage,
+                'flavor', 1, 'project_id', 'user_id2'),
+        ]
+        app = mock.Mock()
+
+        result = utils.group_usage(app)
+
+        expected = [
+            ('user_id1', 'DISK_GB:20, MEMORY_MB:40, VCPU:60'),
+            ('user_id2', 'DISK_GB:10, MEMORY_MB:20, VCPU:30'),
+        ]
+        self.assertEqual(expected, result)

@@ -105,7 +105,7 @@ AllocationList = collections.namedtuple(
                        "project_id", "user_id"))
 
 
-def get_allocations_with_server_info(app):
+def get_allocations_with_server_info(app, flat_usage=True):
     """Get allocations, add in server and resource provider details."""
     resource_providers = resource_provider.get_all(app.placement_client)
     rp_dict = {rp.uuid: rp.name for rp in resource_providers}
@@ -120,17 +120,19 @@ def get_allocations_with_server_info(app):
         rp_name = rp_dict[allocation.resource_provider_uuid]
 
         # TODO(johngarbutt) this is too presentation like for here
-        usage_amounts = ["%s:%s" % (rca.resource_class, rca.amount)
-                         for rca in allocation.resources]
-        usage_amounts.sort()
-        usage_text = ", ".join(usage_amounts)
+        usage = allocation.resources
+        if flat_usage:
+            usage_amounts = ["%s:%s" % (rca.resource_class, rca.amount)
+                             for rca in allocation.resources]
+            usage_amounts.sort()
+            usage = ", ".join(usage_amounts)
 
         server = server_data.get(app.compute_client, allocation.consumer_uuid)
         delta = now - server.created
         days_running = delta.days
 
         allocation_tuples.append(AllocationList(
-            rp_name, allocation.consumer_uuid, usage_text,
+            rp_name, allocation.consumer_uuid, usage,
             server.flavor_id, days_running, server.project_id,
             server.user_id))
 
@@ -138,3 +140,39 @@ def get_allocations_with_server_info(app):
                                           x.days * -1, x.flavor_id))
 
     return allocation_tuples
+
+
+UsageSummary = collections.namedtuple(
+    "UsageSummary", ("resource_provider_name", "consumer_uuid",
+                     "usage", "flavor_id", "days",
+                     "project_id", "user_id"))
+
+
+def group_usage(app):
+    all_allocations = get_allocations_with_server_info(app, flat_usage=False)
+
+    # TODO(johngarbutt) add a parameter for sort key
+    def get_key(allocation):
+        return allocation.user_id
+
+    grouped_allocations = collections.defaultdict(list)
+    for allocation in all_allocations:
+        grouped_allocations[get_key(allocation)].append(allocation)
+
+    summary_tuples = []
+    for key, group in grouped_allocations.items():
+        grouped_usage = collections.defaultdict(int)
+        for allocation in group:
+            for rca in allocation.usage:
+                grouped_usage[rca.resource_class] += rca.amount
+
+        usage_amounts = ["%s:%s" % (resource_class, total)
+                         for resource_class, total in grouped_usage.items()]
+        usage_amounts.sort()
+        usage = ", ".join(usage_amounts)
+
+        summary_tuples.append((key, usage))
+
+    summary_tuples.sort()
+
+    return summary_tuples
