@@ -62,7 +62,7 @@ class TestUtils(unittest.TestCase):
         ]
         app = mock.Mock()
 
-        result = list(utils.get_all_inventories_and_usage(app))
+        result = list(utils.get_providers_with_resources_and_servers(app))
 
         mock_grp.assert_called_once_with(app.placement_client)
         self.assertEqual(3, mock_gi.call_count)

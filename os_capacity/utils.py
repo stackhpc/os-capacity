@@ -26,7 +26,7 @@ def get_flavors(app):
     return [(f.id, f.name, f.vcpus, f.ram_mb, f.disk_gb) for f in raw_flavors]
 
 
-def get_all_inventories_and_usage(app):
+def get_providers_with_resources_and_servers(app):
     resource_providers = resource_provider.get_all(app.placement_client)
 
     for rp in resource_providers:

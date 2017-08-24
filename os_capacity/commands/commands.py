@@ -31,11 +31,11 @@ class FlavorList(Lister):
 
 
 class ListResourcesAll(Lister):
-    """List all resource providers, with their resources and allocations."""
+    """List all resource providers, with their resources and servers."""
 
     def take_action(self, parsed_args):
-        inventories = utils.get_all_inventories_and_usage(self.app)
-        return (('Provider Name', 'Resources', 'Allocations'), inventories)
+        inventories = utils.get_providers_with_resources_and_servers(self.app)
+        return (('Provider Name', 'Resources', 'Severs'), inventories)
 
 
 class ListResourcesGroups(Lister):
