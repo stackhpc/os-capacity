@@ -26,42 +26,9 @@ def get_flavors(app):
     return [(f.id, f.name, f.vcpus, f.ram_mb, f.disk_gb) for f in raw_flavors]
 
 
-def _get_resource_providers(app):
-    app.LOG.debug("Getting resource providers")
-    raw_rps = resource_provider.get_all(app.placement_client)
-    return [(rp.uuid, rp.name) for rp in raw_rps]
-
-
-def _get_inventories(app, rps):
-    app.LOG.debug("Getting all inventories")
-    client = app.placement_client
-    inventories = {}
-    for uuid, name in rps:
-        url = "/resource_providers/%s/inventories" % uuid
-        response = client.get(url).json()
-        raw_inventories = response['inventories']
-        inventories[uuid] = {}
-        for resource_class in raw_inventories.keys():
-            max_unit = raw_inventories[resource_class]['max_unit']
-            inventories[uuid][resource_class] = max_unit
-    return inventories
-
-
 def _get_now():
     # To make it easy to mock in tests
     return datetime.now()
-
-
-def _get_allocations(app, rps):
-    app.LOG.debug("Getting all allocations")
-    client = app.placement_client
-    allocations_by_rp = {}
-    for uuid, name in rps:
-        url = "/resource_providers/%s/allocations" % uuid
-        response = client.get(url).json()
-        raw_allocations = response['allocations']
-        allocations_by_rp[uuid] = raw_allocations
-    return allocations_by_rp
 
 
 AllocationList = collections.namedtuple(
