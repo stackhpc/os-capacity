@@ -195,7 +195,7 @@ class TestUtils(unittest.TestCase):
         result = utils.group_usage(app)
 
         expected = [
-            ('user_id1', 'DISK_GB:20, MEMORY_MB:40, VCPU:60'),
-            ('user_id2', 'DISK_GB:10, MEMORY_MB:20, VCPU:30'),
+            ('user_id1', 'Count:2, DISK_GB:20, MEMORY_MB:40, VCPU:60'),
+            ('user_id2', 'Count:1, DISK_GB:10, MEMORY_MB:20, VCPU:30'),
         ]
         self.assertEqual(expected, result)

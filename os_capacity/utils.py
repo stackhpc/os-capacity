@@ -165,6 +165,7 @@ def group_usage(app):
         for allocation in group:
             for rca in allocation.usage:
                 grouped_usage[rca.resource_class] += rca.amount
+            grouped_usage["Count"] += 1
 
         usage_amounts = ["%s:%s" % (resource_class, total)
                          for resource_class, total in grouped_usage.items()]
