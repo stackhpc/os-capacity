@@ -26,52 +26,6 @@ def get_flavors(app):
     return [(f.id, f.name, f.vcpus, f.ram_mb, f.disk_gb) for f in raw_flavors]
 
 
-def _get_now():
-    # To make it easy to mock in tests
-    return datetime.now()
-
-
-AllocationList = collections.namedtuple(
-    "AllocationList", ("resource_provider_name", "consumer_uuid",
-                       "usage", "flavor_id", "days",
-                       "project_id", "user_id"))
-
-
-def get_allocation_list(app):
-    """Get allocations, add in server and resource provider details."""
-    resource_providers = resource_provider.get_all(app.placement_client)
-    rp_dict = {rp.uuid: rp.name for rp in resource_providers}
-
-    all_allocations = resource_provider.get_all_allocations(
-        app.placement_client, resource_providers)
-
-    now = _get_now()
-
-    allocation_tuples = []
-    for allocation in all_allocations:
-        rp_name = rp_dict[allocation.resource_provider_uuid]
-
-        # TODO(johngarbutt) this is too presentation like for here
-        usage_amounts = ["%s:%s" % (rca.resource_class, rca.amount)
-                         for rca in allocation.resources]
-        usage_amounts.sort()
-        usage_text = ", ".join(usage_amounts)
-
-        server = server_data.get(app.compute_client, allocation.consumer_uuid)
-        delta = now - server.created
-        days_running = delta.days
-
-        allocation_tuples.append(AllocationList(
-            rp_name, allocation.consumer_uuid, usage_text,
-            server.flavor_id, days_running, server.project_id,
-            server.user_id))
-
-    allocation_tuples.sort(key=lambda x: (x.project_id, x.user_id,
-                                          x.days * -1, x.flavor_id))
-
-    return allocation_tuples
-
-
 def get_all_inventories_and_usage(app):
     resource_providers = resource_provider.get_all(app.placement_client)
 
@@ -138,3 +92,49 @@ def group_all_inventories(app):
         free = total - used
 
         yield (resources, total, used, free, matching_flavors)
+
+
+def _get_now():
+    # To make it easy to mock in tests
+    return datetime.now()
+
+
+AllocationList = collections.namedtuple(
+    "AllocationList", ("resource_provider_name", "consumer_uuid",
+                       "usage", "flavor_id", "days",
+                       "project_id", "user_id"))
+
+
+def get_allocation_list(app):
+    """Get allocations, add in server and resource provider details."""
+    resource_providers = resource_provider.get_all(app.placement_client)
+    rp_dict = {rp.uuid: rp.name for rp in resource_providers}
+
+    all_allocations = resource_provider.get_all_allocations(
+        app.placement_client, resource_providers)
+
+    now = _get_now()
+
+    allocation_tuples = []
+    for allocation in all_allocations:
+        rp_name = rp_dict[allocation.resource_provider_uuid]
+
+        # TODO(johngarbutt) this is too presentation like for here
+        usage_amounts = ["%s:%s" % (rca.resource_class, rca.amount)
+                         for rca in allocation.resources]
+        usage_amounts.sort()
+        usage_text = ", ".join(usage_amounts)
+
+        server = server_data.get(app.compute_client, allocation.consumer_uuid)
+        delta = now - server.created
+        days_running = delta.days
+
+        allocation_tuples.append(AllocationList(
+            rp_name, allocation.consumer_uuid, usage_text,
+            server.flavor_id, days_running, server.project_id,
+            server.user_id))
+
+    allocation_tuples.sort(key=lambda x: (x.project_id, x.user_id,
+                                          x.days * -1, x.flavor_id))
+
+    return allocation_tuples

@@ -53,7 +53,8 @@ setup(
         'os_capacity.commands': [
             'flavor_list = os_capacity.commands.commands:FlavorList',
             'resources_all = os_capacity.commands.commands:ListResourcesAll',
-            'resources_group = os_capacity.commands.commands:ListResourcesGroups',
+            'resources_group = os_capacity.commands'
+            '.commands:ListResourcesGroups',
             'usages_all = os_capacity.commands.commands:ListUsagesAll',
         ],
     },

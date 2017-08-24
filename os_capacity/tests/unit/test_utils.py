@@ -19,7 +19,6 @@ import unittest
 from os_capacity.data import flavors
 from os_capacity.data import resource_provider
 from os_capacity.data import server
-from os_capacity.tests.unit import fakes
 from os_capacity import utils
 
 
