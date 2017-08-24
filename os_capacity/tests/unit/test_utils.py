@@ -157,7 +157,7 @@ class TestUtils(unittest.TestCase):
         ]
         app = mock.Mock()
 
-        result = utils.get_allocation_list(app)
+        result = utils.get_allocations_with_server_info(app)
 
         mock_rps.assert_called_once_with(app.placement_client)
         self.assertEqual(2, len(result))

@@ -105,7 +105,7 @@ AllocationList = collections.namedtuple(
                        "project_id", "user_id"))
 
 
-def get_allocation_list(app):
+def get_allocations_with_server_info(app):
     """Get allocations, add in server and resource provider details."""
     resource_providers = resource_provider.get_all(app.placement_client)
     rp_dict = {rp.uuid: rp.name for rp in resource_providers}
