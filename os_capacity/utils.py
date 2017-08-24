@@ -166,17 +166,27 @@ def group_usage(app, group_by="user"):
     summary_tuples = []
     for key, group in grouped_allocations.items():
         grouped_usage = collections.defaultdict(int)
+        grouped_usage_days = collections.defaultdict(int)
         for allocation in group:
             for rca in allocation.usage:
                 grouped_usage[rca.resource_class] += rca.amount
+                grouped_usage_days[rca.resource_class] += (
+                    rca.amount * allocation.days)
             grouped_usage["Count"] += 1
+            grouped_usage_days["Count"] += allocation.days
 
         usage_amounts = ["%s:%s" % (resource_class, total)
                          for resource_class, total in grouped_usage.items()]
         usage_amounts.sort()
         usage = ", ".join(usage_amounts)
 
-        summary_tuples.append((key, usage))
+        usage_days_amounts = [
+            "%s:%s" % (resource_class, total)
+            for resource_class, total in grouped_usage_days.items()]
+        usage_days_amounts.sort()
+        usage_days = ", ".join(usage_days_amounts)
+
+        summary_tuples.append((key, usage, usage_days))
 
     summary_tuples.sort()
 

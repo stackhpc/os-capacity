@@ -59,7 +59,12 @@ class ListUsagesAll(Lister):
 
 
 class ListUsagesGroup(Lister):
-    """Group usage by specified key (by user or project)."""
+    """Group usage by specified key (by user or project).
+
+    NOTE: The usage days is not complete as it only takes into
+    account any currently active servers. Any previously deleted
+    servers are not counted.
+    """
 
     def get_parser(self, prog_name):
         parser = super(ListUsagesGroup, self).get_parser(prog_name)
@@ -71,4 +76,4 @@ class ListUsagesGroup(Lister):
     def take_action(self, parsed_args):
         usages = utils.group_usage(self.app, parsed_args.group_by)
         sort_key_title = parsed_args.group_by.title()
-        return ((sort_key_title, 'Current Usage'), usages)
+        return ((sort_key_title, 'Current Usage', 'Usage Days'), usages)
