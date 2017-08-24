@@ -148,12 +148,16 @@ UsageSummary = collections.namedtuple(
                      "project_id", "user_id"))
 
 
-def group_usage(app):
+def group_usage(app, group_by="user"):
     all_allocations = get_allocations_with_server_info(app, flat_usage=False)
 
     # TODO(johngarbutt) add a parameter for sort key
     def get_key(allocation):
-        return allocation.user_id
+        if group_by == "user":
+            return allocation.user_id
+        if group_by == "project":
+            return allocation.project_id
+        return "(All)"
 
     grouped_allocations = collections.defaultdict(list)
     for allocation in all_allocations:

@@ -59,8 +59,16 @@ class ListUsagesAll(Lister):
 
 
 class ListUsagesGroup(Lister):
-    """Group usage by user_id."""
+    """Group usage by specified key (by user or project)."""
+
+    def get_parser(self, prog_name):
+        parser = super(ListUsagesGroup, self).get_parser(prog_name)
+        parser.add_argument('group_by', nargs='?', default='user',
+                            help='Group by user_id or project_id or all',
+                            choices=['user', 'project', 'all'])
+        return parser
 
     def take_action(self, parsed_args):
-        usages = utils.group_usage(self.app)
-        return (('User', 'Current Usage'), usages)
+        usages = utils.group_usage(self.app, parsed_args.group_by)
+        sort_key_title = parsed_args.group_by.title()
+        return ((sort_key_title, 'Current Usage'), usages)

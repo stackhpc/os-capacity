@@ -172,8 +172,7 @@ class TestUtils(unittest.TestCase):
             'flavor', 1, 'project_id', 'user_id')
         self.assertEqual(expected2, result[1])
 
-    @mock.patch.object(utils, "get_allocations_with_server_info")
-    def test_group_usage(self, mock_get_allocations):
+    def _setup_fake_allocations(self, mock_get_allocations):
         fake_usage = [
             resource_provider.ResourceClassAmount("DISK_GB", 10),
             resource_provider.ResourceClassAmount("MEMORY_MB", 20),
@@ -190,6 +189,10 @@ class TestUtils(unittest.TestCase):
                 'name2', 'consumer_uuid1', fake_usage,
                 'flavor', 1, 'project_id', 'user_id2'),
         ]
+
+    @mock.patch.object(utils, "get_allocations_with_server_info")
+    def test_group_usage(self, mock_get_allocations):
+        self._setup_fake_allocations(mock_get_allocations)
         app = mock.Mock()
 
         result = utils.group_usage(app)
@@ -197,5 +200,29 @@ class TestUtils(unittest.TestCase):
         expected = [
             ('user_id1', 'Count:2, DISK_GB:20, MEMORY_MB:40, VCPU:60'),
             ('user_id2', 'Count:1, DISK_GB:10, MEMORY_MB:20, VCPU:30'),
+        ]
+        self.assertEqual(expected, result)
+
+    @mock.patch.object(utils, "get_allocations_with_server_info")
+    def test_group_usage_project(self, mock_get_allocations):
+        self._setup_fake_allocations(mock_get_allocations)
+        app = mock.Mock()
+
+        result = utils.group_usage(app, "project")
+
+        expected = [
+            ('project_id', 'Count:3, DISK_GB:30, MEMORY_MB:60, VCPU:90'),
+        ]
+        self.assertEqual(expected, result)
+
+    @mock.patch.object(utils, "get_allocations_with_server_info")
+    def test_group_usage_all(self, mock_get_allocations):
+        self._setup_fake_allocations(mock_get_allocations)
+        app = mock.Mock()
+
+        result = utils.group_usage(app, "all")
+
+        expected = [
+            ('all', 'Count:3, DISK_GB:30, MEMORY_MB:60, VCPU:90'),
         ]
         self.assertEqual(expected, result)
