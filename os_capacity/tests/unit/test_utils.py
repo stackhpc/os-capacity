@@ -114,7 +114,7 @@ class TestUtils(unittest.TestCase):
         ]
         app = mock.Mock()
 
-        result = list(utils.group_all_inventories(app))
+        result = list(utils.group_providers_by_type_with_capacity(app))
 
         self.assertEqual(2, len(result))
         expected = [

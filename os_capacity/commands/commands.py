@@ -42,7 +42,7 @@ class ListResourcesGroups(Lister):
     """Lists counts of resource providers with similar inventories."""
 
     def take_action(self, parsed_args):
-        groups = utils.group_all_inventories(self.app)
+        groups = utils.group_providers_by_type_with_capacity(self.app)
         return (
             ('Resource Class Groups', 'Total', 'Used', 'Free', 'Flavors'),
             groups)

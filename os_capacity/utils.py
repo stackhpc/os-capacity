@@ -47,7 +47,7 @@ def get_providers_with_resources_and_servers(app):
         yield (rp.name, inventory_text, allocation_text)
 
 
-def group_all_inventories(app):
+def group_providers_by_type_with_capacity(app):
     # TODO(johngarbutt) this flavor grouping is very ironic specific
     all_flavors = flavors.get_all(app.compute_client)
     grouped_flavors = collections.defaultdict(list)
