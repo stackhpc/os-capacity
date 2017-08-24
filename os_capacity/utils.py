@@ -142,6 +142,7 @@ def group_all_inventories(app):
         inventories = resource_provider.get_inventories(
             app.placement_client, rp)
 
+        # TODO(johngarbutt) much refinement needed to be general...
         vcpus = 0
         ram_mb = 0
         disk_gb = 0
@@ -156,7 +157,6 @@ def group_all_inventories(app):
 
         inventory_counts[key] += 1
 
-        # TODO(johngarbutt) much refinement needed here...
         allocations = resource_provider.get_allocations(
             app.placement_client, rp)
         if allocations:

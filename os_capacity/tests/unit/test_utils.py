@@ -112,7 +112,6 @@ class TestUtils(unittest.TestCase):
              resource_provider.Inventory("uuid1", "DISK_GB", 6)],
         ]
         app = mock.Mock()
-        app.placement_client = "fake"
 
         result = list(utils.get_all_inventories_and_usage(app))
 
@@ -126,25 +125,54 @@ class TestUtils(unittest.TestCase):
             ('name3', 'DISK_GB:6, VCPU:10', 'consumer_uuid2'),
         ], result)
 
-    def test_group_inventories(self):
-        fake_all_inventories = [
-            ('uuid1', 'name1', 30, 20, 10, True),
-            ('uuid2', 'name2', 0, 0, 0, False),
-            ('uuid3', 'name3', 30, 20, 10, False),
+    @mock.patch.object(resource_provider, 'get_allocations')
+    @mock.patch.object(resource_provider, 'get_inventories')
+    @mock.patch.object(resource_provider, 'get_all')
+    @mock.patch.object(flavors, 'get_all')
+    def test_group_inventories(self, mock_flav, mock_grp, mock_gi, mock_ga):
+        mock_flav.return_value = [
+            flavors.Flavor(id="id1", name="flavor1",
+                           vcpus=1, ram_mb=2, disk_gb=3),
+            flavors.Flavor(id="id2", name="flavor2",
+                           vcpus=1, ram_mb=2, disk_gb=30),
+            flavors.Flavor(id="id3", name="flavor3",
+                           vcpus=1, ram_mb=2, disk_gb=3),
         ]
-        fake_flavors = [
-            ('uuid1', 'test1', 30, 20, 10),
-            ('uuid2', 'test2', 30, 20, 10),
-            ('uuid3', 'test3', 8, 2048, 30),
+        mock_grp.return_value = [
+            resource_provider.ResourceProvider('uuid1', 'name1'),
+            resource_provider.ResourceProvider('uuid2', 'name2'),
+            resource_provider.ResourceProvider('uuid3', 'name3')]
+        fake_r = [
+            resource_provider.ResourceClassAmount("VCPU", 1),
+            resource_provider.ResourceClassAmount("MEMORY_MB", 2),
+            resource_provider.ResourceClassAmount("DISK_GB", 3),
         ]
+        mock_ga.side_effect = [
+            [resource_provider.Allocation("uuid1", "consumer_uuid1", fake_r)],
+            [],
+            [resource_provider.Allocation("uuid3", "consumer_uuid2", fake_r)],
+        ]
+        mock_gi.side_effect = [
+            [resource_provider.Inventory("uuid1", "VCPU", 1),
+             resource_provider.Inventory("uuid1", "MEMORY_MB", 2),
+             resource_provider.Inventory("uuid1", "DISK_GB", 3)],
+            [resource_provider.Inventory("uuid1", "VCPU", 1),
+             resource_provider.Inventory("uuid1", "MEMORY_MB", 2),
+             resource_provider.Inventory("uuid1", "DISK_GB", 30)],
+            [resource_provider.Inventory("uuid1", "VCPU", 1),
+             resource_provider.Inventory("uuid1", "MEMORY_MB", 2),
+             resource_provider.Inventory("uuid1", "DISK_GB", 3)],
+        ]
+        app = mock.Mock()
 
-        result = list(utils.group_all_inventories(
-            fake_all_inventories, fake_flavors))
+        result = list(utils.group_all_inventories(app))
 
         self.assertEqual(2, len(result))
-        self.assertEqual([
-            ('VCPU:30,MEMORY_MB:20,DISK_GB:10', 2, 1, 1, "test1, test2"),
-            ('VCPU:0,MEMORY_MB:0,DISK_GB:0', 1, 0, 1, '')], result)
+        expected = [
+            ('VCPU:1,MEMORY_MB:2,DISK_GB:30', 1, 0, 1, 'flavor2'),
+            ('VCPU:1,MEMORY_MB:2,DISK_GB:3', 2, 2, 0, 'flavor1, flavor3')
+        ]
+        self.assertEqual(expected, result)
 
     def test_get_allocations(self):
         fake_rps = [('uuid1', 'name1')]
