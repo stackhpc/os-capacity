@@ -151,7 +151,6 @@ UsageSummary = collections.namedtuple(
 def group_usage(app, group_by="user"):
     all_allocations = get_allocations_with_server_info(app, flat_usage=False)
 
-    # TODO(johngarbutt) add a parameter for sort key
     def get_key(allocation):
         if group_by == "user":
             return allocation.user_id
@@ -188,6 +187,7 @@ def group_usage(app, group_by="user"):
 
         summary_tuples.append((key, usage, usage_days))
 
-    summary_tuples.sort()
+    # Sort my largest current usage first
+    summary_tuples.sort(key=lambda x: x[1], reverse=True)
 
     return summary_tuples
