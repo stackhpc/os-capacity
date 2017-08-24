@@ -80,7 +80,7 @@ can also get the output in json format by adding the format flag:
 
     (.venv-test) $ os-capacity -v flavor list -f json
 
-You can look at all the different types of servers and capacity used:
+You can look at all the different types of resources and amount used:
 
 .. code::
 
@@ -92,8 +92,47 @@ You can look at all the different types of servers and capacity used:
     | VCPU:2,MEMORY_MB:1024,DISK_GB:40 |     2 |    0 |    2 | my-flavor-2 |
     +----------------------------------+-------+------+------+-------------+
 
+
+You can also look at the usage grouped by project or user or total usage:
+
+.. code::
+
+    (.venv-test) $ os-capacity usages group user --max-width 70
+    +----------------------+----------------------+----------------------+
+    | User                 | Current Usage        | Usage Days           |
+    +----------------------+----------------------+----------------------+
+    | 1e6abb726dd04d4eb4b8 | Count:4,             | Count:410,           |
+    | 94e19c397d5e         | DISK_GB:1484,        | DISK_GB:152110,      |
+    |                      | MEMORY_MB:524288,    | MEMORY_MB:53739520,  |
+    |                      | VCPU:256             | VCPU:26240           |
+    | 4661c3e5f2804696ba26 | Count:1,             | Count:3,             |
+    | 56b50dbd0f3d         | DISK_GB:371,         | DISK_GB:1113,        |
+    |                      | MEMORY_MB:131072,    | MEMORY_MB:393216,    |
+    |                      | VCPU:64              | VCPU:192             |
+    +----------------------+----------------------+----------------------+
+
 See the online help for more details:
 
 .. code::
 
     os-capacity help
+    usage: os-capacity [--version] [-v | -q] [--log-file LOG_FILE] [-h] [--debug]
+
+    OS-Capacity (StackHPC) Command Line Interface (CLI)
+
+    optional arguments:
+      --version            show program's version number and exit
+      -v, --verbose        Increase verbosity of output. Can be repeated.
+      -q, --quiet          Suppress output except warnings and errors.
+      --log-file LOG_FILE  Specify a file to log output. Disabled by default.
+      -h, --help           Show help message and exit.
+      --debug              Show tracebacks on errors.
+
+    Commands:
+      complete       print bash completion command
+      flavor list    List all the flavors.
+      help           print detailed help for another command
+      resources all  List all resource providers, with their resources and servers.
+      resources group  Lists counts of resource providers with similar inventories.
+      usages all     List all current resource usages.
+      usages group   Group usage by specified key (by user or project).

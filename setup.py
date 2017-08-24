@@ -19,7 +19,7 @@ from setuptools import setup
 
 
 PROJECT = 'os_capacity'
-VERSION = '0.1'
+VERSION = '0.2'
 
 try:
     long_description = open('README.md', 'rt').read()
