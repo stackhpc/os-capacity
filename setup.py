@@ -48,13 +48,13 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'os-capacity = os_capacity.cmd.os_capacity:main',
+            'os-capacity = os_capacity.shell:main',
         ],
-        'os_capacity.cli': [
-            'flavor_list = os_capacity.cli.commands:FlavorList',
-            'resources_all = os_capacity.cli.commands:ListResourcesAll',
-            'resources_group = os_capacity.cli.commands:ListResourcesGroups',
-            'usages_all = os_capacity.cli.commands:ListUsagesAll',
+        'os_capacity.commands': [
+            'flavor_list = os_capacity.commands.commands:FlavorList',
+            'resources_all = os_capacity.commands.commands:ListResourcesAll',
+            'resources_group = os_capacity.commands.commands:ListResourcesGroups',
+            'usages_all = os_capacity.commands.commands:ListUsagesAll',
         ],
     },
 )

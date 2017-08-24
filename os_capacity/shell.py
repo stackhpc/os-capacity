@@ -34,7 +34,7 @@ class CapacityApp(App):
         super(CapacityApp, self).__init__(
             description='OS-Capacity (StackHPC) Command Line Interface (CLI)',
             version='0.1',
-            command_manager=CommandManager('os_capacity.cli'),
+            command_manager=CommandManager('os_capacity.commands'),
             deferred_help=True,
             )
 
