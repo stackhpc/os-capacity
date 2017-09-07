@@ -1,0 +1,56 @@
+<h2 align="center">Capacity</h2>
+
+<p align="center">Note: this is stale data from Thu  7 Sep 13:04:05 BST 2017</p>
+
+<div align="center" id="capacity_text">
+  <table id="capacity_table">
+  <tr>
+    <th>Flavors</th>
+    <th>Free</th>
+    <th>Used</th>
+    <th>Total</th>
+  <tr>
+  <table>
+</div>
+
+<script type="application/json" id="capacity_data">
+[
+  {
+    "Flavors": "compute-GPU",
+    "Resource Class Groups": "VCPU:64,MEMORY_MB:131072,DISK_GB:744",
+    "Total": 2,
+    "Used": 0,
+    "Free": 2
+  },
+  {
+    "Flavors": "compute-A",
+    "Resource Class Groups": "VCPU:64,MEMORY_MB:131072,DISK_GB:371",
+    "Total": 25,
+    "Used": 15,
+    "Free": 10
+  },
+  {
+    "Flavors": "storage-A",
+    "Resource Class Groups": "VCPU:48,MEMORY_MB:131072,DISK_GB:557",
+    "Total": 1,
+    "Used": 1,
+    "Free": 0
+  }
+]
+</script>
+
+<script type="text/javascript">
+  $( document ).ready(function() {
+    var raw = $("#capacity_data").text();
+    var table = $('#capacity_table');
+    var data = JSON.parse(raw);
+    $(data).each(function(index, item) {
+      var row = $('<tr/>');
+      row.append($('<td>').text(item['Flavors']));
+      row.append($('<td>').text(item['Free']));
+      row.append($('<td>').text(item['Used']));
+      row.append($('<td>').text(item['Total']));
+      table.append(row);
+    });
+});
+</script>

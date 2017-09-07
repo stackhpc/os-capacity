@@ -1,0 +1,17 @@
+{
+    "command": "/usr/sbin/httpd -DFOREGROUND",
+    "config_files": [
+        {
+            "source": "/var/lib/kolla/config_files/horizon.conf",
+            "dest": "/etc/httpd/conf.d/horizon.conf",
+            "owner": "horizon",
+            "perm": "0600"
+        },
+        {
+            "source": "/var/lib/kolla/config_files/_footer.html",
+            "dest": "/usr/share/openstack-dashboard/openstack_dashboard/templates/_login_footer.html",
+            "owner": "horizon",
+            "perm": "0600"
+        },
+...
+}
