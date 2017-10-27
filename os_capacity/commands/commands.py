@@ -49,18 +49,21 @@ class ListResourcesGroups(Lister):
         metrics_to_send = []
         for group in groups:
             flavors = group[4].replace(", ", "-")
+            if not flavors:
+                # skip empty hosts
+                continue
             total = group[1]
             used = group[2]
             free = group[3]
             metrics_to_send.append(metrics.Metric(
-                name="resources.total.%s" % flavors,
-                value=total))
+                name="resources.total", value=total,
+                dimensions={"flavor": flavors}))
             metrics_to_send.append(metrics.Metric(
-                name="resources.used.%s" % flavors,
-                value=used))
+                name="resources.used", value=used,
+                dimensions={"flavor": flavors}))
             metrics_to_send.append(metrics.Metric(
-                name="resources.free.%s" % flavors,
-                value=free))
+                name="resources.free", value=free,
+                dimensions={"flavor": flavors}))
         metrics.send_metrics(self.app.monitoring_client, metrics_to_send)
 
         return (

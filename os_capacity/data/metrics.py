@@ -17,18 +17,18 @@ import time
 
 
 Metric = collections.namedtuple(
-    "Metric", ("name", "value"))
+    "Metric", ("name", "value", "dimensions"))
 
 def send_metrics(monitoring_client, metrics):
     timestamp = time.time()
     formatted_metrics = []
     for metric in metrics:
         formatted_metrics.append({
-            "name": "os-capacity.%s" % metric.name,
+            "name": "os_capacity.%s" % metric.name,
             "value": float(metric.value),
             "timestamp": timestamp,
             "value_meta": None,
-            "dimentions": {},  # TODO
+            "dimensions": metric.dimensions,
         })
     response = monitoring_client.post("/metrics", json=formatted_metrics)
     if not response:
