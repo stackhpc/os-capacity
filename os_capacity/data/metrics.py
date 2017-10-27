@@ -20,7 +20,7 @@ Metric = collections.namedtuple(
     "Metric", ("name", "value", "dimensions"))
 
 def send_metrics(monitoring_client, metrics):
-    timestamp = time.time()
+    timestamp = float(round(time.time() * 1000)) / 1000
     formatted_metrics = []
     for metric in metrics:
         formatted_metrics.append({
