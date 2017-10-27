@@ -16,6 +16,7 @@ import collections
 from datetime import datetime
 
 from os_capacity.data import flavors
+from os_capacity.data import metrics
 from os_capacity.data import resource_provider
 from os_capacity.data import server as server_data
 
@@ -162,12 +163,15 @@ def group_usage(app, group_by="user"):
     for allocation in all_allocations:
         grouped_allocations[get_key(allocation)].append(allocation)
 
+    metrics_to_send = []
     summary_tuples = []
     for key, group in grouped_allocations.items():
         grouped_usage = collections.defaultdict(int)
         grouped_usage_days = collections.defaultdict(int)
         for allocation in group:
             for rca in allocation.usage:
+                if allocation.days == 0:
+                    allocation.days = 1
                 grouped_usage[rca.resource_class] += rca.amount
                 grouped_usage_days[rca.resource_class] += (
                     rca.amount * allocation.days)
@@ -187,7 +191,20 @@ def group_usage(app, group_by="user"):
 
         summary_tuples.append((key, usage, usage_days))
 
+        if group_by == "user":
+            metrics_to_send.append(metrics.Metric(
+                name="usage.count",
+                value=grouped_usage['Count'],
+                dimensions={"user_id": key}))
+            metrics_to_send.append(metrics.Metric(
+                name="usage.days.count",
+                value=grouped_usage_days['Count'],
+                dimensions={"user_id": key}))
+
     # Sort my largest current usage first
     summary_tuples.sort(key=lambda x: x[1], reverse=True)
+
+    if metrics_to_send:
+        metrics.send_metrics(app.monitoring_client, metrics_to_send)
 
     return summary_tuples
