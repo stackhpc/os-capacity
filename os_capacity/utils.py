@@ -19,6 +19,7 @@ from os_capacity.data import flavors
 from os_capacity.data import metrics
 from os_capacity.data import resource_provider
 from os_capacity.data import server as server_data
+from os_capacity.data import users
 
 
 def get_flavors(app):
@@ -163,6 +164,8 @@ def group_usage(app, group_by="user"):
     for allocation in all_allocations:
         grouped_allocations[get_key(allocation)].append(allocation)
 
+    all_users = users.get_all(app.identity_client)
+
     metrics_to_send = []
     summary_tuples = []
     for key, group in grouped_allocations.items():
@@ -192,14 +195,18 @@ def group_usage(app, group_by="user"):
         summary_tuples.append((key, usage, usage_days))
 
         if group_by == "user":
+            dimensions = {"user_id": key}
+            if key in all_users:
+                dimensions["username"] = all_users.get(key)
+
             metrics_to_send.append(metrics.Metric(
                 name="usage.count",
                 value=grouped_usage['Count'],
-                dimensions={"user_id": key}))
+                dimensions=dimensions))
             metrics_to_send.append(metrics.Metric(
                 name="usage.days.count",
                 value=grouped_usage_days['Count'],
-                dimensions={"user_id": key}))
+                dimensions=dimensions))
 
     # Sort my largest current usage first
     summary_tuples.sort(key=lambda x: x[1], reverse=True)

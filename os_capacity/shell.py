@@ -45,6 +45,7 @@ class CapacityApp(App):
         self.compute_client = config.get_session_client("compute")
         self.placement_client = config.get_session_client("placement")
         self.monitoring_client = config.get_session_client("monitoring")
+        self.identity_client = config.get_session_client("identity")
 
         self.LOG.debug('setup Keystone API REST clients')
 
