@@ -53,18 +53,19 @@ class ListResourcesGroups(Lister):
             if not flavors:
                 # skip empty hosts
                 continue
+            resources = group[0]
             total = group[1]
             used = group[2]
             free = group[3]
             metrics_to_send.append(metrics.Metric(
                 name="resources.total", value=total,
-                dimensions={"flavor": flavors}))
+                dimensions={"flavor": flavors, "resources": resources}))
             metrics_to_send.append(metrics.Metric(
                 name="resources.used", value=used,
-                dimensions={"flavor": flavors}))
+                dimensions={"flavor": flavors, "resources": resources}))
             metrics_to_send.append(metrics.Metric(
                 name="resources.free", value=free,
-                dimensions={"flavor": flavors}))
+                dimensions={"flavor": flavors, "resources": resources}))
         metrics.send_metrics(self.app.monitoring_client, metrics_to_send)
 
         return (

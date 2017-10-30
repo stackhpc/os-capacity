@@ -94,7 +94,7 @@ def group_providers_by_type_with_capacity(app):
             allocation_counts[key] += 1
 
     for key, inventory_count in inventory_counts.items():
-        resources = "VCPU:%s,MEMORY_MB:%s,DISK_GB:%s,%s" % key
+        resources = "VCPU:%s, MEMORY_MB:%s, DISK_GB:%s, %s" % key
         matching_flavors = grouped_flavors[key]
         matching_flavors.sort()
         matching_flavors = ", ".join(matching_flavors)
