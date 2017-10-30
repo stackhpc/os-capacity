@@ -1,7 +1,7 @@
 os-capacity
 ===========
 
-This is a prototype tool to extract pototype information.
+This is a prototype tool to extract prototype information.
 
 .. note::
 
@@ -17,7 +17,7 @@ First lets get the code downloaded:
     git clone https://github.com/JohnGarbutt/os-capacity.git
     cd os-capacity
 
-Now lets get that installed inside a virtual enviroment:
+Now lets get that installed inside a virtual environment:
 
 .. code::
 
@@ -32,7 +32,7 @@ The easiest way to configure this is to populate a typical OpenStack RC file:
 
 .. code::
 
-    cat > openrc <<EOF
+    cat > .openrc <<EOF
     export OS_AUTH_URL=http://keystone.example.com:5000/v3
     export OS_PROJECT_ID=
     export OS_PROJECT_NAME=
@@ -48,7 +48,10 @@ The easiest way to configure this is to populate a typical OpenStack RC file:
     export OS_PASSWORD=$OS_PASSWORD_INPUT
     EOF
 
-    source openrc
+    source .openrc
+
+Some openrc files don't contain the OS_AUTH_PLUGIN and OS_PROJECT_DOMAIN_NAME
+variables, but os-capacity requires that those are set.
 
 Usage
 -----
@@ -58,7 +61,7 @@ When opening a new terminal, first activate the venv and the configuration:
 .. code::
 
     source .venv-test/bin/activate
-    source openrc
+    source .openrc
 
 
 You can do things like list all flavors:
@@ -136,3 +139,19 @@ See the online help for more details:
       resources group  Lists counts of resource providers with similar inventories.
       usages all     List all current resource usages.
       usages group   Group usage by specified key (by user or project).
+
+Submitting Metrics to Monasca
+-----------------------------
+
+There is now an experimental mode where metrics can be written into Monasca
+for the calls "resources group" and "usages group user". To enable this
+feature you must set::
+
+    export OS_CAPACITY_SEND_METRICS=1
+
+To later disable the feature you must unset the environment variable::
+
+    unset OS_CAPACITY_SEND_METRICS
+
+For an example of using this with cron, please see the example script in
+``cron/example.sh``.

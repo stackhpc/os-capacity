@@ -13,13 +13,19 @@
 # under the License.
 
 import collections
+import os
 import time
-
 
 Metric = collections.namedtuple(
     "Metric", ("name", "value", "dimensions"))
 
+SEND_METRICS = 'OS_CAPACITY_SEND_METRICS' in os.environ
+
+
 def send_metrics(monitoring_client, metrics):
+    if not SEND_METRICS:
+        return
+
     timestamp = time.time() * 1000
     formatted_metrics = []
     for metric in metrics:
