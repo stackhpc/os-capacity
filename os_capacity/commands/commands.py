@@ -77,7 +77,8 @@ class ListUsagesAll(Lister):
     """List all current resource usages."""
 
     def take_action(self, parsed_args):
-        allocations = utils.get_allocations_with_server_info(self.app)
+        allocations = utils.get_allocations_with_server_info(
+                self.app, get_names=True)
         return (
             ('Provider Name', 'Server UUID', 'Resources',
              'Flavor', 'Days', 'Project', 'User'), allocations)

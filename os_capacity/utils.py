@@ -116,7 +116,7 @@ AllocationList = collections.namedtuple(
                        "project_id", "user_id"))
 
 
-def get_allocations_with_server_info(app, flat_usage=True):
+def get_allocations_with_server_info(app, flat_usage=True, get_names=False):
     """Get allocations, add in server and resource provider details."""
     resource_providers = resource_provider.get_all(app.placement_client)
     rp_dict = {rp.uuid: rp.name for rp in resource_providers}
@@ -149,6 +149,28 @@ def get_allocations_with_server_info(app, flat_usage=True):
 
     allocation_tuples.sort(key=lambda x: (x.project_id, x.user_id,
                                           x.days * -1, x.flavor_id))
+
+    if get_names:
+        all_users = users.get_all(app.identity_client)
+        all_projects = users.get_all_projects(app.identity_client)
+        all_flavors_list = flavors.get_all(
+                app.compute_client, include_extra_specs=False)
+        all_flavors = {flavor.id: flavor.name for flavor in all_flavors_list}
+
+        updated = []
+        for allocation in allocation_tuples:
+            user_id = all_users.get(allocation.user_id)
+            project_id = all_projects.get(allocation.project_id)
+            flavor_id = all_flavors.get(allocation.flavor_id)
+            updated.append(AllocationList(
+                allocation.resource_provider_name,
+                allocation.consumer_uuid,
+                allocation.usage,
+                flavor_id,
+                allocation.days,
+                project_id,
+                user_id))
+        allocation_tuples = updated
 
     return allocation_tuples
 
