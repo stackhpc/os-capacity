@@ -24,8 +24,7 @@ from os_capacity.data import users
 
 def get_flavors(app):
     app.LOG.debug("Getting flavors")
-    raw_flavors = flavors.get_all(app.compute_client)
-    return [(f.id, f.name, f.vcpus, f.ram_mb, f.disk_gb) for f in raw_flavors]
+    return flavors.get_all(app.compute_client, include_extra_specs=True)
 
 
 def get_providers_with_resources_and_servers(app):
