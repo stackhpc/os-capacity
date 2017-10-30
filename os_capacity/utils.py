@@ -53,7 +53,13 @@ def group_providers_by_type_with_capacity(app):
     all_flavors = flavors.get_all(app.compute_client)
     grouped_flavors = collections.defaultdict(list)
     for flavor in all_flavors:
-        key = (flavor.vcpus, flavor.ram_mb, flavor.disk_gb)
+        custom_rc = None
+        for extra_spec in flavor.extra_specs:
+            if extra_spec.startswith('resources:CUSTOM'):
+                custom_rc = extra_spec.replace('resources:', '')
+                break  # Assuming a good Ironic setup here
+
+        key = (flavor.vcpus, flavor.ram_mb, flavor.disk_gb, custom_rc)
         grouped_flavors[key] += [flavor.name]
 
     all_resource_providers = resource_provider.get_all(app.placement_client)
@@ -68,6 +74,7 @@ def group_providers_by_type_with_capacity(app):
         vcpus = 0
         ram_mb = 0
         disk_gb = 0
+        custom_rc = None
         for inventory in inventories:
             if "VCPU" in inventory.resource_class:
                 vcpus += inventory.total
@@ -75,7 +82,9 @@ def group_providers_by_type_with_capacity(app):
                 ram_mb += inventory.total
             if "DISK" in inventory.resource_class:
                 disk_gb += inventory.total
-        key = (vcpus, ram_mb, disk_gb)
+            if inventory.resource_class.startswith('CUSTOM_'):
+                custom_rc = inventory.resource_class  # Ironic specific
+        key = (vcpus, ram_mb, disk_gb, custom_rc)
 
         inventory_counts[key] += 1
 
@@ -85,7 +94,7 @@ def group_providers_by_type_with_capacity(app):
             allocation_counts[key] += 1
 
     for key, inventory_count in inventory_counts.items():
-        resources = "VCPU:%s,MEMORY_MB:%s,DISK_GB:%s" % key
+        resources = "VCPU:%s,MEMORY_MB:%s,DISK_GB:%s,%s" % key
         matching_flavors = grouped_flavors[key]
         matching_flavors = ", ".join(matching_flavors)
         total = inventory_count
