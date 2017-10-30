@@ -41,10 +41,10 @@
   "style": "dark",
   "timezone": "browser",
   "editable": true,
-  "sharedCrosshair": false,
+  "sharedCrosshair": true,
   "hideControls": true,
   "time": {
-    "from": "now-7d",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {
@@ -80,7 +80,7 @@
   },
   "refresh": false,
   "schemaVersion": 13,
-  "version": 5,
+  "version": 12,
   "links": [],
   "gnetId": null,
   "rows": [
@@ -90,8 +90,8 @@
         {
           "columns": [
             {
-              "text": "Min",
-              "value": "min"
+              "text": "Current",
+              "value": "current"
             }
           ],
           "datasource": "${DS_MONASCA-METRICS}",
@@ -156,8 +156,8 @@
         {
           "columns": [
             {
-              "text": "Avg",
-              "value": "avg"
+              "text": "Current",
+              "value": "current"
             }
           ],
           "datasource": "${DS_MONASCA-METRICS}",
@@ -220,8 +220,8 @@
         {
           "columns": [
             {
-              "text": "Avg",
-              "value": "avg"
+              "text": "Current",
+              "value": "current"
             }
           ],
           "datasource": "${DS_MONASCA-METRICS}",
@@ -319,7 +319,7 @@
           "renderer": "flot",
           "seriesOverrides": [],
           "span": 4,
-          "stack": false,
+          "stack": true,
           "steppedLine": false,
           "targets": [
             {
@@ -397,7 +397,7 @@
           "renderer": "flot",
           "seriesOverrides": [],
           "span": 4,
-          "stack": false,
+          "stack": true,
           "steppedLine": false,
           "targets": [
             {
@@ -451,8 +451,8 @@
         {
           "columns": [
             {
-              "text": "Max",
-              "value": "max"
+              "text": "Current",
+              "value": "current"
             }
           ],
           "datasource": "${DS_MONASCA-METRICS}",
