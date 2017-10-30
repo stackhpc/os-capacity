@@ -209,7 +209,7 @@ def group_usage(app, group_by="user"):
 
         summary_tuples.append((key_name or key, usage, usage_days))
 
-        if group_by:
+        if group_by == "user" or group_by == "project_id":
             if group_by == "user":
                 dimensions = {"user_id": key}
                 name_key = "username"
