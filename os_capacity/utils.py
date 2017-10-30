@@ -173,11 +173,12 @@ def group_usage(app, group_by="user"):
         grouped_usage_days = collections.defaultdict(int)
         for allocation in group:
             for rca in allocation.usage:
-                if allocation.days == 0:
-                    allocation.days = 1
                 grouped_usage[rca.resource_class] += rca.amount
-                grouped_usage_days[rca.resource_class] += (
-                    rca.amount * allocation.days)
+                if allocation.days < 1:
+                    grouped_usage_days[rca.resource_class] += rca.amount
+                else:
+                    grouped_usage_days[rca.resource_class] += (
+                        rca.amount * allocation.days)
             grouped_usage["Count"] += 1
             grouped_usage_days["Count"] += allocation.days
 
