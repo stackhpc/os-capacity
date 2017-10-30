@@ -189,7 +189,7 @@ def group_usage(app, group_by="user"):
                     grouped_usage_days[rca.resource_class] += (
                         rca.amount * allocation.days)
             grouped_usage["Count"] += 1
-            grouped_usage_days["Count"] += allocation.days
+            grouped_usage_days["Count"] += allocation.days or 1
 
         usage_amounts = ["%s:%s" % (resource_class, total)
                          for resource_class, total in grouped_usage.items()]
