@@ -140,7 +140,7 @@ def get_allocations_with_server_info(app, flat_usage=True):
 
         server = server_data.get(app.compute_client, allocation.consumer_uuid)
         delta = now - server.created
-        days_running = delta.days
+        days_running = delta.days + 1
 
         allocation_tuples.append(AllocationList(
             rp_name, allocation.consumer_uuid, usage,
@@ -183,13 +183,10 @@ def group_usage(app, group_by="user"):
         for allocation in group:
             for rca in allocation.usage:
                 grouped_usage[rca.resource_class] += rca.amount
-                if allocation.days < 1:
-                    grouped_usage_days[rca.resource_class] += rca.amount
-                else:
-                    grouped_usage_days[rca.resource_class] += (
-                        rca.amount * allocation.days)
+                grouped_usage_days[rca.resource_class] += (
+                    rca.amount * allocation.days)
             grouped_usage["Count"] += 1
-            grouped_usage_days["Count"] += allocation.days or 1
+            grouped_usage_days["Count"] += allocation.days
 
         usage_amounts = ["%s:%s" % (resource_class, total)
                          for resource_class, total in grouped_usage.items()]
