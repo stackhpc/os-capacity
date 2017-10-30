@@ -15,5 +15,10 @@
 def get_all(identity_client):
     response = identity_client.get("/v3/users").json()
     raw_users = response['users']
-    # TODO(johngarbutt) disk should probably include ephemeral
     return {u['id']: u['name'] for u in raw_users}
+
+
+def get_all_projects(identity_client):
+    response = identity_client.get("/v3/projects").json()
+    raw_projects = response['projects']
+    return {u['id']: u['name'] for u in raw_projects}

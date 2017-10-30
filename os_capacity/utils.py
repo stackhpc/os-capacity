@@ -174,6 +174,7 @@ def group_usage(app, group_by="user"):
         grouped_allocations[get_key(allocation)].append(allocation)
 
     all_users = users.get_all(app.identity_client)
+    all_projects = users.get_all_projects(app.identity_client)
 
     metrics_to_send = []
     summary_tuples = []
@@ -199,19 +200,32 @@ def group_usage(app, group_by="user"):
         usage_days_amounts.sort()
         usage_days = ", ".join(usage_days_amounts)
 
-        summary_tuples.append((key, usage, usage_days))
-
+        # Resolve id to name, if possible
+        key_name = None
         if group_by == "user":
-            dimensions = {"user_id": key}
-            if key in all_users:
-                dimensions["username"] = all_users.get(key)
+            key_name = all_users.get(key)
+        elif group_by == "project":
+            key_name = all_projects.get(key)
+
+        summary_tuples.append((key_name or key, usage, usage_days))
+
+        if group_by:
+            if group_by == "user":
+                dimensions = {"user_id": key}
+                name_key = "username"
+            else:
+                dimensions = {"project_id": key}
+                name_key = "project_name"
+
+            if key_name:
+                dimensions[name_key] = key_name
 
             metrics_to_send.append(metrics.Metric(
-                name="usage.count",
+                name="usage.%s.count" % group_by,
                 value=grouped_usage['Count'],
                 dimensions=dimensions))
             metrics_to_send.append(metrics.Metric(
-                name="usage.days.count",
+                name="usage.%s.days.count" % group_by,
                 value=grouped_usage_days['Count'],
                 dimensions=dimensions))
 
