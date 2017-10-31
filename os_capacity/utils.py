@@ -153,8 +153,8 @@ def get_allocations_with_server_info(app, flat_usage=True, get_names=False):
     if get_names:
         all_users = users.get_all(app.identity_client)
         all_projects = users.get_all_projects(app.identity_client)
-        all_flavors_list = flavors.get_all(
-                app.compute_client, include_extra_specs=False)
+        all_flavors_list = flavors.get_all(app.compute_client,
+                                           include_extra_specs=False)
         all_flavors = {flavor.id: flavor.name for flavor in all_flavors_list}
 
         updated = []

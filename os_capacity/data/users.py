@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
 def get_all(identity_client):
     response = identity_client.get("/v3/users").json()
     raw_users = response['users']

@@ -44,7 +44,7 @@ class ListResourcesGroups(Lister):
     """Lists counts of resource providers with similar inventories."""
 
     def take_action(self, parsed_args):
-        groups = utils.group_providers_by_type_with_capacity(self.app) 
+        groups = utils.group_providers_by_type_with_capacity(self.app)
         groups = list(groups)  # convert iterator
 
         metrics_to_send = []
@@ -77,8 +77,8 @@ class ListUsagesAll(Lister):
     """List all current resource usages."""
 
     def take_action(self, parsed_args):
-        allocations = utils.get_allocations_with_server_info(
-                self.app, get_names=True)
+        allocations = utils.get_allocations_with_server_info(self.app,
+                                                             get_names=True)
         return (
             ('Provider Name', 'Server UUID', 'Resources',
              'Flavor', 'Days', 'Project', 'User'), allocations)
