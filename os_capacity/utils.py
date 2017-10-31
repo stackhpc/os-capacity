@@ -242,7 +242,7 @@ def group_usage(app, group_by="user"):
             if key_name:
                 dimensions[name_key] = key_name
             value_meta = {'usage_summary': usage}
-            dimensions['version'] = 2.0
+            dimensions['version'] = '2.0'
 
             metrics_to_send.append(metrics.Metric(
                 name="usage.%s.count" % group_by,
