@@ -24,16 +24,35 @@ from os_capacity.tests.unit import fakes
 
 class TestFlavor(unittest.TestCase):
 
-    def test_get_all(self):
+    def test_get_all_no_extra_specs(self):
         fake_response = mock.MagicMock()
         fake_response.json.return_value = fakes.FLAVOR_RESPONSE
         compute_client = mock.MagicMock()
         compute_client.get.return_value = fake_response
 
-        result = flavors.get_all(compute_client)
+        result = flavors.get_all(compute_client, False)
 
         compute_client.get.assert_called_once_with("/flavors/detail")
-        expected_flavors = [(fakes.FLAVOR['id'], 'compute-GPU', 8, 2048, 30)]
+        expected_flavors = [flavors.Flavor(fakes.FLAVOR['id'], 'compute-GPU',
+                                           8, 2048, 30, None)]
+        self.assertEqual(expected_flavors, result)
+
+    def test_get_all(self):
+        fake_response1 = mock.MagicMock()
+        fake_response1.json.return_value = fakes.FLAVOR_RESPONSE
+        fake_response2 = mock.MagicMock()
+        fake_response2.json.return_value = fakes.FLAVOR_EXTRA_RESPONSE
+        compute_client = mock.MagicMock()
+        compute_client.get.side_effect = [fake_response1, fake_response2]
+
+        result = flavors.get_all(compute_client)
+
+        compute_client.get.assert_has_calls([
+            mock.call("/flavors/detail"),
+            mock.call("/flavors/%s/os-extra_specs" % fakes.FLAVOR['id'])])
+        expected_flavors = [flavors.Flavor(fakes.FLAVOR['id'], 'compute-GPU',
+                                           8, 2048, 30,
+                                           {'example_key': 'example_value'})]
         self.assertEqual(expected_flavors, result)
 
 

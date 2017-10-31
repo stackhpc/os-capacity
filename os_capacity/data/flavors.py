@@ -22,12 +22,15 @@ Flavor = collections.namedtuple(
 def get_all(compute_client, include_extra_specs=True):
     response = compute_client.get('/flavors/detail').json()
     raw_flavors = response['flavors']
+
+    extra_specs = {}
     if include_extra_specs:
         for flavor in raw_flavors:
             url = '/flavors/%s/os-extra_specs' % flavor['id']
             response = compute_client.get(url).json()
-            flavor['extra_specs'] = response['extra_specs']
+            extra_specs[flavor['id']] = response['extra_specs']
+
     return [Flavor(f['id'], f['name'], f['vcpus'], f['ram'],
                    (f['disk'] + f['OS-FLV-EXT-DATA:ephemeral']),
-                   f.get('extra_specs'))
+                   extra_specs.get(f['id']))
             for f in raw_flavors]

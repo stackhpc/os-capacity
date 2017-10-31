@@ -33,6 +33,8 @@ FLAVOR = {
 }
 FLAVOR_RESPONSE = {'flavors': [FLAVOR]}
 
+FLAVOR_EXTRA_RESPONSE = {'extra_specs': {"example_key": "example_value"}}
+
 RESOURCE_PROVIDER = {
     'generation': 6,
     'name': 'name1',
