@@ -17,7 +17,7 @@ import os
 import time
 
 Metric = collections.namedtuple(
-    "Metric", ("name", "value", "dimensions"))
+    "Metric", ("name", "value", "value_meta", "dimensions"))
 
 SEND_METRICS = 'OS_CAPACITY_SEND_METRICS' in os.environ
 
@@ -33,7 +33,7 @@ def send_metrics(monitoring_client, metrics):
             "name": "os_capacity.%s" % metric.name,
             "value": float(metric.value),
             "timestamp": timestamp,
-            "value_meta": None,
+            "value_meta": metric.value_meta,
             "dimensions": metric.dimensions,
         })
     response = monitoring_client.post("/metrics", json=formatted_metrics)
