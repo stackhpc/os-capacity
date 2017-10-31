@@ -241,16 +241,18 @@ def group_usage(app, group_by="user"):
 
             if key_name:
                 dimensions[name_key] = key_name
-            dimensions['usage_summary'] = usage
+            value_meta = {'usage_summary': usage}
             dimensions['version'] = 2.0
 
             metrics_to_send.append(metrics.Metric(
                 name="usage.%s.count" % group_by,
                 value=grouped_usage['Count'],
+                value_meta=value_meta,
                 dimensions=dimensions))
             metrics_to_send.append(metrics.Metric(
                 name="usage.%s.days.count" % group_by,
                 value=grouped_usage_days['Count'],
+                value_meta=value_meta,
                 dimensions=dimensions))
 
     # Sort my largest current usage first
