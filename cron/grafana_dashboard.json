@@ -407,7 +407,7 @@
               "error": "",
               "group": true,
               "hide": false,
-              "metric": "os_capacity.usage.count",
+              "metric": "os_capacity.usage.user.count",
               "period": "300",
               "refId": "A"
             }
@@ -502,7 +502,7 @@
               ],
               "error": "",
               "group": true,
-              "metric": "os_capacity.usage.days.count",
+              "metric": "os_capacity.usage.user.days.count",
               "period": "300",
               "refId": "A"
             }

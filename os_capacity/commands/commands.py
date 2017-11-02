@@ -59,13 +59,16 @@ class ListResourcesGroups(Lister):
             free = group[3]
             metrics_to_send.append(metrics.Metric(
                 name="resources.total", value=total,
-                dimensions={"flavor": flavors, "resources": resources}))
+                value_meta={"flavor_resources": resources},
+                dimensions={"flavor": flavors}))
             metrics_to_send.append(metrics.Metric(
                 name="resources.used", value=used,
-                dimensions={"flavor": flavors, "resources": resources}))
+                value_meta={"flavor_resources": resources},
+                dimensions={"flavor": flavors}))
             metrics_to_send.append(metrics.Metric(
                 name="resources.free", value=free,
-                dimensions={"flavor": flavors, "resources": resources}))
+                value_meta={"flavor_resources": resources},
+                dimensions={"flavor": flavors}))
         metrics.send_metrics(self.app.monitoring_client, metrics_to_send)
 
         return (
