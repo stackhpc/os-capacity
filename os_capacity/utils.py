@@ -14,12 +14,15 @@
 
 import collections
 from datetime import datetime
+import os
 
 from os_capacity.data import flavors
 from os_capacity.data import metrics
 from os_capacity.data import resource_provider
 from os_capacity.data import server as server_data
 from os_capacity.data import users
+
+IGNORE_CUSTOM_RC = 'OS_CAPACITY_IGNORE_CUSTOM_RC' in os.environ
 
 
 def get_flavors(app):
@@ -54,10 +57,11 @@ def group_providers_by_type_with_capacity(app):
     grouped_flavors = collections.defaultdict(list)
     for flavor in all_flavors:
         custom_rc = None
-        for extra_spec in flavor.extra_specs:
-            if extra_spec.startswith('resources:CUSTOM'):
-                custom_rc = extra_spec.replace('resources:', '')
-                break  # Assuming a good Ironic setup here
+        if not IGNORE_CUSTOM_RC:
+            for extra_spec in flavor.extra_specs:
+                if extra_spec.startswith('resources:CUSTOM'):
+                    custom_rc = extra_spec.replace('resources:', '')
+                    break  # Assuming a good Ironic setup here
 
         key = (flavor.vcpus, flavor.ram_mb, flavor.disk_gb, custom_rc)
         grouped_flavors[key] += [flavor.name]
@@ -83,7 +87,8 @@ def group_providers_by_type_with_capacity(app):
             if "DISK" in inventory.resource_class:
                 disk_gb += inventory.total
             if inventory.resource_class.startswith('CUSTOM_'):
-                custom_rc = inventory.resource_class  # Ironic specific
+                if not IGNORE_CUSTOM_RC:
+                    custom_rc = inventory.resource_class  # Ironic specific
         key = (vcpus, ram_mb, disk_gb, custom_rc)
 
         inventory_counts[key] += 1
