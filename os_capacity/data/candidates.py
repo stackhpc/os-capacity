@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
+import collections
+import json
+
 import openstack
 
 
-def get_capacity(conn):
-    flavors = list(conn.compute.flavors())
-    print("Flavor count: " + str(len(flavors)))
-
+def get_capacity_per_flavor(conn, flavors):
     capacity_per_flavor = {}
+
     for flavor in flavors:
         resources, traits = get_placement_request(flavor)
-        candidates = get_candidates(conn, resources, traits, flavor.name)
-        # intentionally add empty responses into this
-        capacity_per_flavor[flavor.name] = candidates
+        max_per_host = get_max_per_host(conn, resources, traits)
+        capacity_per_flavor[flavor.name] = max_per_host
+
     return capacity_per_flavor
 
 
@@ -31,7 +32,7 @@ def get_placement_request(flavor):
     return resources, required_traits
 
 
-def get_candidates(conn, resources, required_traits, flavor_name):
+def get_max_per_host(conn, resources, required_traits):
     resource_str = ",".join(
         [key + ":" + str(value) for key, value in resources.items() if value]
     )
@@ -59,15 +60,34 @@ def get_candidates(conn, resources, required_traits, flavor_name):
         if max_counts:
             count_per_rp[rp_uuid] = min(max_counts)
 
-    print("Found " + str(len(count_per_rp.keys())) + " candidate hosts for " + flavor_name)
     return count_per_rp
 
 
 def main():
     conn = openstack.connect()
-    capacity_per_flavor = get_capacity(conn)
-    import json
-    print(json.dumps(capacity_per_flavor, indent=2))
+
+    flavors = list(conn.compute.flavors())
+    capacity_per_flavor = get_capacity_per_flavor(conn, flavors)
+
+    # total capacity per flavor
+    flavor_names = sorted([f.name for f in flavors])
+    for flavor_name in flavor_names:
+        counts = capacity_per_flavor.get(flavor_name, {}).values()
+        total = 0 if not counts else sum(counts)
+        print(f'openstack_total_capacity_per_flavor{{flavor="{flavor_name}"}} {total}')
+
+    # capacity per host
+    raw_rps = list(conn.placement.resource_providers())
+    resource_providers = {rp.name: rp.id for rp in raw_rps}
+    hostnames = sorted(resource_providers.keys())
+    for hostname in hostnames:
+        rp_id = resource_providers[hostname]
+        for flavor_name in flavor_names:
+            all_counts = capacity_per_flavor.get(flavor_name, {})
+            our_count = all_counts.get(rp_id, 0)
+            print(
+                f'openstack_capacity_by_hostname{{hypervisor="{hostname}",flavor="{flavor_name}"}} {our_count}'
+            )
 
 
 main()
