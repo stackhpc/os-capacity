@@ -6,12 +6,12 @@ import json
 import openstack
 
 
-def get_capacity_per_flavor(conn, flavors):
+def get_capacity_per_flavor(placement_client, flavors):
     capacity_per_flavor = {}
 
     for flavor in flavors:
         resources, traits = get_placement_request(flavor)
-        max_per_host = get_max_per_host(conn, resources, traits)
+        max_per_host = get_max_per_host(placement_client, resources, traits)
         capacity_per_flavor[flavor.name] = max_per_host
 
     return capacity_per_flavor
@@ -27,12 +27,14 @@ def get_placement_request(flavor):
         if "resources:" == key[:10]:
             count = int(value)
             resources[key[10:]] = count
+        if "hw:cpu_policy" == key and value == "dedicated":
+            resources["PCPU"] = flavor.vcpus
     if "PCPU" not in resources.keys() and "VCPU" not in resources.keys():
         resources["VCPU"] = flavor.vcpus
     return resources, required_traits
 
 
-def get_max_per_host(conn, resources, required_traits):
+def get_max_per_host(placement_client, resources, required_traits):
     resource_str = ",".join(
         [key + ":" + str(value) for key, value in resources.items() if value]
     )
@@ -40,7 +42,7 @@ def get_max_per_host(conn, resources, required_traits):
     # TODO(johngarbut): remove disabled!
     forbidden_str = "COMPUTE_STATUS_DISABLED"
 
-    response = conn.placement.get(
+    response = placement_client.get(
         "/allocation_candidates",
         params={"resources": resource_str, "required": required_str},
         headers={"OpenStack-API-Version": "placement 1.29"},
@@ -63,11 +65,9 @@ def get_max_per_host(conn, resources, required_traits):
     return count_per_rp
 
 
-def main():
-    conn = openstack.connect()
-
-    flavors = list(conn.compute.flavors())
-    capacity_per_flavor = get_capacity_per_flavor(conn, flavors)
+def print_exporter_data(app):
+    flavors = list(app.compute_client.flavors())
+    capacity_per_flavor = get_capacity_per_flavor(app.placement_client, flavors)
 
     # total capacity per flavor
     flavor_names = sorted([f.name for f in flavors])
@@ -77,7 +77,7 @@ def main():
         print(f'openstack_total_capacity_per_flavor{{flavor="{flavor_name}"}} {total}')
 
     # capacity per host
-    raw_rps = list(conn.placement.resource_providers())
+    raw_rps = list(app.placement_client.resource_providers())
     resource_providers = {rp.name: rp.id for rp in raw_rps}
     hostnames = sorted(resource_providers.keys())
     for hostname in hostnames:
@@ -85,9 +85,8 @@ def main():
         for flavor_name in flavor_names:
             all_counts = capacity_per_flavor.get(flavor_name, {})
             our_count = all_counts.get(rp_id, 0)
+            if our_count == 0:
+                continue
             print(
                 f'openstack_capacity_by_hostname{{hypervisor="{hostname}",flavor="{flavor_name}"}} {our_count}'
             )
-
-
-main()

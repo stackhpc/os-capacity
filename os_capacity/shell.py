@@ -18,6 +18,7 @@ from cliff.app import App
 from cliff.commandmanager import CommandManager
 import os_client_config
 
+import openstack
 
 def get_cloud_config():
     # TODO(johngarbutt) consider passing in argument parser
@@ -41,11 +42,11 @@ class CapacityApp(App):
     def initialize_app(self, argv):
         self.LOG.debug('initialize_app')
 
-        config = os_client_config.get_config()
-        self.compute_client = config.get_session_client("compute")
-        self.placement_client = config.get_session_client("placement")
-        self.monitoring_client = config.get_session_client("monitoring")
-        self.identity_client = config.get_session_client("identity")
+        conn = openstack.openstack.connect()
+        self.connection = conn
+        self.compute_client = conn.compute
+        self.placement_client = conn.placement
+        self.identity_client = conn.identity
 
         self.LOG.debug('setup Keystone API REST clients')
 

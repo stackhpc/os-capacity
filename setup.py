@@ -57,6 +57,7 @@ setup(
             '.commands:ListResourcesGroups',
             'usages_all = os_capacity.commands.commands:ListUsagesAll',
             'usages_group = os_capacity.commands.commands:ListUsagesGroup',
+            'prometheus = os_capacity.commands.commands:PrometheusAll',
         ],
     },
 )
