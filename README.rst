@@ -1,7 +1,7 @@
 os-capacity
 ===========
 
-This is a prototype tool to extract prototype information.
+This is a prototype tool to extract capacity information.
 
 .. note::
 
@@ -24,6 +24,17 @@ Now lets get that installed inside a virtual environment:
     virtualenv .venv-test
     source .venv-test/bin/activate
     pip install -U .
+
+Prometheus Exporter
+-------------------
+
+Assuming you have clouds.yaml in the right place and OS_CLOUD set:
+
+.. code::
+
+   ./os_capacity/prometheus.py
+   openstack_total_capacity_per_flavor{flavor="small"} 1
+   openstack_capacity_by_hostname{hypervisor="aio",flavor="small"} 1
 
 Configuration
 -------------

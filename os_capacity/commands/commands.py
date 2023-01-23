@@ -18,14 +18,15 @@ import logging
 from cliff.lister import Lister
 
 from os_capacity.data import metrics
+from os_capacity import prometheus
 from os_capacity import utils
-from os_capacity.data import candidates
+
 
 
 class PrometheusAll(Lister):
     """To be run as node exporter textfile collector."""
     def take_action(self, parsed_args):
-        candidates.print_exporter_data(self.app)
+        prometheus.print_exporter_data(self.app)
         # TODO(johngarbutt) a total hack!
         return (('fake'), [])
 
