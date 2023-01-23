@@ -26,12 +26,14 @@ def get_placement_request(flavor):
         resources["VCPU"] = flavor.vcpus
     return resources, required_traits
 
+
 def get_candidates(conn, resources, traits, flavor_name):
     resource_str = ",".join(
         [key + ":" + str(value) for key, value in resources.items() if value]
     )
     print(resource_str)
     return [], 0
+
 
 def main():
     conn = openstack.connect()
