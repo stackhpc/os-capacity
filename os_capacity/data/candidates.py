@@ -65,9 +65,10 @@ def get_max_per_host(placement_client, resources, required_traits):
     return count_per_rp
 
 
-def print_exporter_data(app):
-    flavors = list(app.compute_client.flavors())
-    capacity_per_flavor = get_capacity_per_flavor(app.placement_client, flavors)
+
+def print_details(compute_client, placement_client):
+    flavors = list(compute_client.flavors())
+    capacity_per_flavor = get_capacity_per_flavor(placement_client, flavors)
 
     # total capacity per flavor
     flavor_names = sorted([f.name for f in flavors])
@@ -77,7 +78,7 @@ def print_exporter_data(app):
         print(f'openstack_total_capacity_per_flavor{{flavor="{flavor_name}"}} {total}')
 
     # capacity per host
-    raw_rps = list(app.placement_client.resource_providers())
+    raw_rps = list(placement_client.resource_providers())
     resource_providers = {rp.name: rp.id for rp in raw_rps}
     hostnames = sorted(resource_providers.keys())
     for hostname in hostnames:
@@ -90,3 +91,12 @@ def print_exporter_data(app):
             print(
                 f'openstack_capacity_by_hostname{{hypervisor="{hostname}",flavor="{flavor_name}"}} {our_count}'
             )
+
+
+def print_exporter_data(app):
+    print_details(app.compute_client, app.placement_client)
+
+
+if __name__ == '__main__':
+    conn = openstack.connect()
+    print_details(conn.compute, conn.placement)

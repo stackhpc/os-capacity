@@ -42,7 +42,7 @@ class CapacityApp(App):
     def initialize_app(self, argv):
         self.LOG.debug('initialize_app')
 
-        conn = openstack.openstack.connect()
+        conn = openstack.connect()
         self.connection = conn
         self.compute_client = conn.compute
         self.placement_client = conn.placement
