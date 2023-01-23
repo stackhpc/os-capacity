@@ -13,8 +13,8 @@
 # under the License.
 
 import datetime
-import mock
 import unittest
+from unittest import mock
 
 from os_capacity.data import flavors
 from os_capacity.data import resource_provider
