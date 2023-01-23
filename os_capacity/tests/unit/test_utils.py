@@ -13,8 +13,8 @@
 # under the License.
 
 import datetime
-import mock
 import unittest
+from unittest import mock
 
 from os_capacity.data import flavors
 from os_capacity.data import resource_provider
@@ -26,15 +26,18 @@ class TestUtils(unittest.TestCase):
 
     @mock.patch.object(flavors, "get_all")
     def test_get_flavors(self, mock_flavors):
-        mock_flavors.return_value = [flavors.Flavor(
-            id="id", name="name", vcpus=1, ram_mb=2, disk_gb=3)]
+        mock_list = [flavors.Flavor(
+            id="id", name="name", vcpus=1, ram_mb=2, disk_gb=3,
+            extra_specs={})]
+        mock_flavors.return_value = mock_list
         app = mock.Mock()
 
         result = utils.get_flavors(app)
 
-        mock_flavors.assert_called_once_with(app.compute_client)
-        expected_flavors = [('id', 'name', 1, 2, 3)]
-        self.assertEqual(expected_flavors, result)
+        mock_flavors.assert_called_once_with(
+            app.compute_client, include_extra_specs=True)
+        expected_flavors = [('id', 'name', 1, 2, 3, {})]
+        self.assertEqual(mock_list, result)
 
     @mock.patch.object(resource_provider, 'get_allocations')
     @mock.patch.object(resource_provider, 'get_inventories')

@@ -135,23 +135,8 @@ See the online help for more details:
       complete       print bash completion command
       flavor list    List all the flavors.
       help           print detailed help for another command
+      prometheus  To be run as node exporter textfile collector
       resources all  List all resource providers, with their resources and servers.
       resources group  Lists counts of resource providers with similar inventories.
       usages all     List all current resource usages.
       usages group   Group usage by specified key (by user or project).
-
-Submitting Metrics to Monasca
------------------------------
-
-There is now an experimental mode where metrics can be written into Monasca
-for the calls "resources group" and "usages group user". To enable this
-feature you must set::
-
-    export OS_CAPACITY_SEND_METRICS=1
-
-To later disable the feature you must unset the environment variable::
-
-    unset OS_CAPACITY_SEND_METRICS
-
-For an example of using this with cron, please see the example script in
-``cron/example.sh``.
