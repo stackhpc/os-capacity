@@ -105,8 +105,19 @@ def get_resource_provider_info(compute_client, placement_client):
             if agg_id in azones:
                 rp["az"] = azones[agg_id]
             if agg_id in project_filters:
-                rp["project_filter"] = project_filters[agg_id]["name"]
-    return resource_providers
+                # TODO(johngarbutt): loosing info here
+                if "project_filter" in rp:
+                    rp["project_filter"] = "multiple"
+                else:
+                    rp["project_filter"] = project_filters[agg_id]["name"]
+
+    project_to_aggregate = collections.defaultdict(list)
+    for filter_info in project_filters.values():
+        name = filter_info["name"]
+        for project in filter_info["projects"]:
+            project_to_aggregate[project] += [name]
+
+    return resource_providers, project_to_aggregate
 
 
 def print_details(compute_client, placement_client):
@@ -121,7 +132,9 @@ def print_details(compute_client, placement_client):
         print(f'openstack_total_capacity_per_flavor{{flavor="{flavor_name}"}} {total}')
 
     # capacity per host
-    resource_providers = get_resource_provider_info(compute_client, placement_client)
+    resource_providers, project_to_aggregate = get_resource_provider_info(
+        compute_client, placement_client
+    )
     hostnames = sorted(resource_providers.keys())
     for hostname in hostnames:
         rp = resource_providers[hostname]
@@ -140,6 +153,12 @@ def print_details(compute_client, placement_client):
                 host_str += f',project_filter="{project_filter}"'
             print(
                 f'openstack_capacity_by_hostname{{{host_str},flavor="{flavor_name}"}} {our_count}'
+            )
+
+    for project, names in project_to_aggregate.items():
+        for name in names:
+            print(
+                f'openstack_project_filter{{project="{project}",aggregate="{name}"}} 1'
             )
 
 
