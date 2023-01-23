@@ -88,8 +88,9 @@ def print_details(compute_client, placement_client):
             our_count = all_counts.get(rp_id, 0)
             if our_count == 0:
                 continue
+            host_str = f'hypervisor="{hostname}"'
             print(
-                f'openstack_capacity_by_hostname{{hypervisor="{hostname}",flavor="{flavor_name}"}} {our_count}'
+                f'openstack_capacity_by_hostname{{{host_str},flavor="{flavor_name}"}} {our_count}'
             )
 
 
