@@ -84,9 +84,6 @@ def get_resource_provider_info(compute_client, placement_client):
             # TODO(johngarbutt): expose project id to aggregate names?
             project_filters[agg.uuid] = {"name": agg.name, "projects": projects}
 
-    # print(json.dumps(azones, indent=2))
-    # print(json.dumps(project_filters, indent=2))
-
     raw_rps = list(placement_client.resource_providers())
 
     resource_providers = {}
