@@ -4,12 +4,16 @@ import openstack
 
 
 def get_capacity(conn):
-    capacity = {}
     flavors = list(conn.compute.flavors())
+    print("Flavor count: " + str(len(flavors)))
+
+    capacity_per_flavor = {}
     for flavor in flavors:
         resources, traits = get_placement_request(flavor)
-        candidates, total = get_candidates(conn, resources, traits, flavor.name)
-    return capacity
+        candidates = get_candidates(conn, resources, traits, flavor.name)
+        # intentionally add empty responses into this
+        capacity_per_flavor[flavor.name] = candidates
+    return capacity_per_flavor
 
 
 def get_placement_request(flavor):
@@ -32,23 +36,38 @@ def get_candidates(conn, resources, required_traits, flavor_name):
         [key + ":" + str(value) for key, value in resources.items() if value]
     )
     required_str = ",".join(required_traits)
+    # TODO(johngarbut): remove disabled!
     forbidden_str = "COMPUTE_STATUS_DISABLED"
 
     response = conn.placement.get(
         "/allocation_candidates",
         params={"resources": resource_str, "required": required_str},
-        headers={"OpenStack-API-Version": "placement 1.29"}
+        headers={"OpenStack-API-Version": "placement 1.29"},
     )
     raw_data = response.json()
-    print(raw_data)
-    raise Exception("asdf")
-    return [], 0
+    count_per_rp = {}
+    for rp_uuid, summary in raw_data.get("provider_summaries", {}).items():
+        # per resource, get max possible number of instances
+        max_counts = []
+        for resource, amounts in summary["resources"].items():
+            requested = resources.get(resource, 0)
+            if requested:
+                free = amounts["capacity"] - amounts["used"]
+                amount = int(free / requested)
+                max_counts.append(amount)
+        # available count is the min of the max counts
+        if max_counts:
+            count_per_rp[rp_uuid] = min(max_counts)
+
+    print("Found " + str(len(count_per_rp.keys())) + " candidate hosts for " + flavor_name)
+    return count_per_rp
 
 
 def main():
     conn = openstack.connect()
-    capacity = get_capacity(conn)
-    print(capacity)
+    capacity_per_flavor = get_capacity(conn)
+    import json
+    print(json.dumps(capacity_per_flavor, indent=2))
 
 
 main()
