@@ -36,6 +36,12 @@ Assuming you have clouds.yaml in the right place and OS_CLOUD set:
    openstack_total_capacity_per_flavor{flavor="small"} 1
    openstack_capacity_by_hostname{hypervisor="aio",flavor="small"} 1
 
+
+TODOs we need support for:
+
+* add request filter support for require_tenant_aggregate,
+  map_az_to_placement_aggregate and compute_status_filter
+
 Configuration
 -------------
 
