@@ -27,11 +27,21 @@ def get_placement_request(flavor):
     return resources, required_traits
 
 
-def get_candidates(conn, resources, traits, flavor_name):
+def get_candidates(conn, resources, required_traits, flavor_name):
     resource_str = ",".join(
         [key + ":" + str(value) for key, value in resources.items() if value]
     )
-    print(resource_str)
+    required_str = ",".join(required_traits)
+    forbidden_str = "COMPUTE_STATUS_DISABLED"
+
+    response = conn.placement.get(
+        "/allocation_candidates",
+        params={"resources": resource_str, "required": required_str},
+        headers={"OpenStack-API-Version": "placement 1.29"}
+    )
+    raw_data = response.json()
+    print(raw_data)
+    raise Exception("asdf")
     return [], 0
 
 
