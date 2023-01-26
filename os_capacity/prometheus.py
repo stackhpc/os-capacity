@@ -18,8 +18,15 @@ def get_capacity_per_flavor(placement_client, flavors):
 
 
 def get_placement_request(flavor):
-    resources = {"MEMORY_MB": flavor.ram, "DISK_GB": (flavor.disk + flavor.ephemeral)}
+    resources = {}
     required_traits = []
+
+    def add_defaults(resources, flavor, skip_vcpu=False):
+        resources["MEMORY_MB"] = flavor.ram
+        resources["DISK_GB"] = flavor.disk + flavor.ephemeral
+        if not skip_vcpu:
+            resources["VCPU"] = flavor.vcpus
+
     for key, value in flavor.extra_specs.items():
         if "trait:" == key[:6]:
             if value == "required":
@@ -29,8 +36,13 @@ def get_placement_request(flavor):
             resources[key[10:]] = count
         if "hw:cpu_policy" == key and value == "dedicated":
             resources["PCPU"] = flavor.vcpus
-    if "PCPU" not in resources.keys() and "VCPU" not in resources.keys():
-        resources["VCPU"] = flavor.vcpus
+            add_defaults(resources, flavor, skip_vcpu=True)
+
+    # if not baremetal and not PCPU
+    # we should add the default vcpu ones
+    if not resources:
+        add_defaults(resources, flavor)
+
     return resources, required_traits
 
 
@@ -61,7 +73,10 @@ def get_max_per_host(placement_client, resources, required_traits):
         # available count is the min of the max counts
         if max_counts:
             count_per_rp[rp_uuid] = min(max_counts)
-
+    if not count_per_rp:
+        print(
+            f"# WARNING - no candidates for resources:{resource_str} traits:{required_str}"
+        )
     return count_per_rp
 
 
@@ -136,6 +151,7 @@ def print_details(compute_client, placement_client):
     for hostname in hostnames:
         rp = resource_providers[hostname]
         rp_id = rp["uuid"]
+        free_space_found = False
         for flavor_name in flavor_names:
             all_counts = capacity_per_flavor.get(flavor_name, {})
             our_count = all_counts.get(rp_id, 0)
@@ -151,6 +167,9 @@ def print_details(compute_client, placement_client):
             print(
                 f'openstack_capacity_by_hostname{{{host_str},flavor="{flavor_name}"}} {our_count}'
             )
+            free_space_found = True
+        if not free_space_found:
+            print(f"# WARNING - no free spaces found for {hostname}")
 
     for project, names in project_to_aggregate.items():
         for name in names:
