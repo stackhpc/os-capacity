@@ -18,8 +18,15 @@ def get_capacity_per_flavor(placement_client, flavors):
 
 
 def get_placement_request(flavor):
-    resources = {"MEMORY_MB": flavor.ram, "DISK_GB": (flavor.disk + flavor.ephemeral)}
+    resources = {}
     required_traits = []
+
+    def add_defaults(resources, flavor, skip_vcpu=False):
+        resources["MEMORY_MB"] = flavor.ram
+        resources["DISK_GB"] = (flavor.disk + flavor.ephemeral)}
+        if not skip_vcpu:
+            resources["VCPU"] = flavor.vcpus
+
     for key, value in flavor.extra_specs.items():
         if "trait:" == key[:6]:
             if value == "required":
@@ -29,8 +36,13 @@ def get_placement_request(flavor):
             resources[key[10:]] = count
         if "hw:cpu_policy" == key and value == "dedicated":
             resources["PCPU"] = flavor.vcpus
-    if "PCPU" not in resources.keys() and "VCPU" not in resources.keys():
-        resources["VCPU"] = flavor.vcpus
+            add_defaults(resources, flavor, skip_vcpu=True)
+
+    # if not baremetal and not PCPU
+    # we should add the default vcpu ones
+    if not resources:
+        add_defaults(resources, flavor)
+
     return resources, required_traits
 
 
