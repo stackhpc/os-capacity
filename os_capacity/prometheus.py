@@ -23,7 +23,7 @@ def get_placement_request(flavor):
 
     def add_defaults(resources, flavor, skip_vcpu=False):
         resources["MEMORY_MB"] = flavor.ram
-        resources["DISK_GB"] = (flavor.disk + flavor.ephemeral)}
+        resources["DISK_GB"] = flavor.disk + flavor.ephemeral
         if not skip_vcpu:
             resources["VCPU"] = flavor.vcpus
 
