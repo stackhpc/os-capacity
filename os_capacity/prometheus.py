@@ -54,9 +54,15 @@ def get_max_per_host(placement_client, resources, required_traits):
     # TODO(johngarbut): remove disabled!
     forbidden_str = "COMPUTE_STATUS_DISABLED"
 
+    params = {"resources": resource_str}
+    if not resource_str:
+        raise Exception("we must have some resources here!")
+    if required_str:
+        params["required"] = required_str
+
     response = placement_client.get(
         "/allocation_candidates",
-        params={"resources": resource_str, "required": required_str},
+        params=params,
         headers={"OpenStack-API-Version": "placement 1.29"},
     )
     raw_data = response.json()
@@ -74,9 +80,7 @@ def get_max_per_host(placement_client, resources, required_traits):
         if max_counts:
             count_per_rp[rp_uuid] = min(max_counts)
     if not count_per_rp:
-        print(
-            f"# WARNING - no candidates for resources:{resource_str} traits:{required_str}"
-        )
+        print(f"# WARNING - no candidates for: {params}")
     return count_per_rp
 
 
