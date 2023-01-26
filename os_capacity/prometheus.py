@@ -73,7 +73,10 @@ def get_max_per_host(placement_client, resources, required_traits):
         # available count is the min of the max counts
         if max_counts:
             count_per_rp[rp_uuid] = min(max_counts)
-
+    if not count_per_rp:
+        print(
+            f"# WARNING - no candidates for resources:{resource_str} traits:{required_str}"
+        )
     return count_per_rp
 
 
@@ -148,6 +151,7 @@ def print_details(compute_client, placement_client):
     for hostname in hostnames:
         rp = resource_providers[hostname]
         rp_id = rp["uuid"]
+        free_space_found = False
         for flavor_name in flavor_names:
             all_counts = capacity_per_flavor.get(flavor_name, {})
             our_count = all_counts.get(rp_id, 0)
@@ -163,6 +167,9 @@ def print_details(compute_client, placement_client):
             print(
                 f'openstack_capacity_by_hostname{{{host_str},flavor="{flavor_name}"}} {our_count}'
             )
+            free_space_found = True
+        if not free_space_found:
+            print(f"# WARNING - no free spaces found for {hostname}")
 
     for project, names in project_to_aggregate.items():
         for name in names:
