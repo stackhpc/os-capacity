@@ -173,6 +173,7 @@ def print_host_details(compute_client, placement_client):
             )
             free_space_found = True
         if not free_space_found:
+            # TODO(johngarbutt) allocation candidates only returns some not all candidates!
             print(f"# WARNING - no free spaces found for {hostname}")
 
     for project, names in project_to_aggregate.items():
@@ -180,6 +181,7 @@ def print_host_details(compute_client, placement_client):
             print(
                 f'openstack_project_filter_aggregate{{project_id="{project}",aggregate="{name}"}} 1'
             )
+    return resource_providers
 
 
 def print_project_usage(indentity_client, placement_client, compute_client):
@@ -226,11 +228,46 @@ def print_project_usage(indentity_client, placement_client, compute_client):
             )
 
 
+def print_host_usage(resource_providers, placement_client):
+    for name, data in resource_providers.items():
+        rp_id = data["uuid"]
+        response = placement_client.get(
+            f"/resource_providers/{rp_id}/usages",
+            headers={"OpenStack-API-Version": "placement 1.19"},
+        )
+        response.raise_for_status()
+        rp_usages = response.json()["usages"]
+        resource_providers[name]["usages"] = rp_usages
+
+        for resource, amount in rp_usages.items():
+            print(
+                f'openstack_hypervisor_usage{{hypervisor="{name}",'
+                f'resource="{resource}"}} {amount}'
+            )
+
+        response = placement_client.get(
+            f"/resource_providers/{rp_id}/inventories",
+            headers={"OpenStack-API-Version": "placement 1.19"},
+        )
+        response.raise_for_status()
+        inventories = response.json()["inventories"]
+        resource_providers[name]["inventories"] = inventories
+
+        for resource, data in inventories.items():
+            amount = data["total"] - data["reserved"]
+            print(
+                f'openstack_hypervisor_allocatable_capacity{{hypervisor="{name}",'
+                f'resource="{resource}"}} {amount}'
+            )
+    # print(json.dumps(resource_providers, indent=2))
+
+
 def print_exporter_data(app):
     print_host_free_details(app.compute_client, app.placement_client)
 
 
 if __name__ == "__main__":
     conn = openstack.connect()
-    print_host_details(conn.compute, conn.placement)
+    resource_providers = print_host_details(conn.compute, conn.placement)
     print_project_usage(conn.identity, conn.placement, conn.compute)
+    print_host_usage(resource_providers, conn.placement)
