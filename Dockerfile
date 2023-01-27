@@ -6,4 +6,4 @@ COPY . /opt/os-capacity
 RUN pip install -U -e /opt/os-capacity
 
 ENTRYPOINT ["tini", "-g", "--"]
-CMD ["python3", "/opt/os-capacity/os_capacity/prometheus.yaml"]
+CMD ["python3", "/opt/os-capacity/os_capacity/prometheus.py"]
