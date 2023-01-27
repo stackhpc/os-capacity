@@ -136,7 +136,7 @@ def get_resource_provider_info(compute_client, placement_client):
     return resource_providers, project_to_aggregate
 
 
-def print_details(compute_client, placement_client):
+def print_host_details(compute_client, placement_client):
     flavors = list(compute_client.flavors())
     capacity_per_flavor = get_capacity_per_flavor(placement_client, flavors)
 
@@ -145,7 +145,7 @@ def print_details(compute_client, placement_client):
     for flavor_name in flavor_names:
         counts = capacity_per_flavor.get(flavor_name, {}).values()
         total = 0 if not counts else sum(counts)
-        print(f'openstack_total_capacity_per_flavor{{flavor="{flavor_name}"}} {total}')
+        print(f'openstack_free_capacity_by_flavor{{flavor="{flavor_name}"}} {total}')
 
     # capacity per host
     resource_providers, project_to_aggregate = get_resource_provider_info(
@@ -169,7 +169,7 @@ def print_details(compute_client, placement_client):
             if project_filter:
                 host_str += f',project_filter="{project_filter}"'
             print(
-                f'openstack_capacity_by_hostname{{{host_str},flavor="{flavor_name}"}} {our_count}'
+                f'openstack_free_capacity_by_hypervisor{{{host_str},flavor="{flavor_name}"}} {our_count}'
             )
             free_space_found = True
         if not free_space_found:
@@ -178,14 +178,18 @@ def print_details(compute_client, placement_client):
     for project, names in project_to_aggregate.items():
         for name in names:
             print(
-                f'openstack_project_filter{{project="{project}",aggregate="{name}"}} 1'
+                f'openstack_project_filter_aggregate{{project="{project}",aggregate="{name}"}} 1'
             )
 
 
+def print_project_usage_(indentity_client, placement_client):
+    pass
+
+
 def print_exporter_data(app):
-    print_details(app.compute_client, app.placement_client)
+    print_host_free_details(app.compute_client, app.placement_client)
 
 
 if __name__ == "__main__":
     conn = openstack.connect()
-    print_details(conn.compute, conn.placement)
+    print_host_details(conn.compute, conn.placement)
