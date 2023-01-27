@@ -160,7 +160,7 @@ def get_host_details(compute_client, placement_client):
     # capacity per host
     free_by_flavor_hypervisor = prom_core.GaugeMetricFamily(
         "openstack_free_capacity_hypervisor_by_flavor",
-        "Free capacity if you fill the cloud full of each flavor",
+        "Free capacity for each hypervisor if you fill remaining space full of each flavor",
         labels=["hypervisor", "flavor_name", "az_aggregate", "project_aggregate"],
     )
     resource_providers, project_to_aggregate = get_resource_provider_info(
@@ -188,7 +188,7 @@ def get_host_details(compute_client, placement_client):
 
     project_filter_aggregates = prom_core.GaugeMetricFamily(
         "openstack_project_filter_aggregate",
-        "Free capacity if you fill the cloud full of each flavor",
+        "Mapping of project_ids to aggregates in the host free capacity info.",
         labels=["project_id", "aggregate"],
     )
     for project, names in project_to_aggregate.items():
@@ -204,7 +204,7 @@ def get_host_details(compute_client, placement_client):
     ]
 
 
-def print_project_usage(indentity_client, placement_client, compute_client):
+def get_project_usage(indentity_client, placement_client, compute_client):
     projects = {proj.id: dict(name=proj.name) for proj in indentity_client.projects()}
     for project_id in projects.keys():
         # TODO(johngarbutt) On Xena we should do consumer_type=INSTANCE using 1.38!
@@ -225,16 +225,23 @@ def print_project_usage(indentity_client, placement_client, compute_client):
         projects[project_id]["quotas"] = dict(
             CPUS=quotas.get("cores"), MEMORY_MB=quotas.get("ram")
         )
-
     # print(json.dumps(projects, indent=2))
+
+    project_usage_guage = prom_core.GaugeMetricFamily(
+        "openstack_project_usage",
+        "Current placement allocations per project.",
+        labels=["project_id", "project_name", "placement_resource"],
+    )
+    project_quota_guage = prom_core.GaugeMetricFamily(
+        "openstack_project_quota",
+        "Current quota set to limit max resource allocations per project.",
+        labels=["project_id", "project_name", "quota_resource"],
+    )
     for project_id, data in projects.items():
         name = data["name"]
         project_usages = data["usages"]
         for resource, amount in project_usages.items():
-            print(
-                f'openstack_project_usage{{project_id="{project_id}",'
-                f'project_name="{name}",resource="{resource}"}} {amount}'
-            )
+            project_usage_guage.add_metric([project_id, name, resource], amount)
 
         if not project_usages:
             # skip projects with zero usage?
@@ -242,10 +249,8 @@ def print_project_usage(indentity_client, placement_client, compute_client):
             continue
         project_quotas = data["quotas"]
         for resource, amount in project_quotas.items():
-            print(
-                f'openstack_project_quota{{project_id="{project_id}",'
-                f'project_name="{name}",resource="{resource}"}} {amount}'
-            )
+            project_quota_guage.add_metric([project_id, name, resource], amount)
+    return [project_usage_guage, project_quota_guage]
 
 
 def print_host_usage(resource_providers, placement_client):
@@ -308,7 +313,7 @@ class OpenStackCapacityCollector(object):
             )
             guages += host_guages
 
-            print_project_usage(conn.identity, conn.placement, conn.compute)
+            guages += get_project_usage(conn.identity, conn.placement, conn.compute)
             print_host_usage(resource_providers, conn.placement)
         except Exception as e:
             print(f"error {e}")
