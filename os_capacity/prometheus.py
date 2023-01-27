@@ -253,7 +253,17 @@ def get_project_usage(indentity_client, placement_client, compute_client):
     return [project_usage_guage, project_quota_guage]
 
 
-def print_host_usage(resource_providers, placement_client):
+def get_host_usage(resource_providers, placement_client):
+    usage_guage = prom_core.GaugeMetricFamily(
+        "openstack_hypervisor_placement_allocated",
+        "Currently allocated resource for each provider in placement.",
+        labels=["hypervisor", "resource"],
+    )
+    capacity_guage = prom_core.GaugeMetricFamily(
+        "openstack_hypervisor_placement_allocatable_capacity",
+        "The total allocatable resource in the placement inventory.",
+        labels=["hypervisor", "resource"],
+    )
     for name, data in resource_providers.items():
         rp_id = data["uuid"]
         response = placement_client.get(
@@ -265,10 +275,7 @@ def print_host_usage(resource_providers, placement_client):
         resource_providers[name]["usages"] = rp_usages
 
         for resource, amount in rp_usages.items():
-            print(
-                f'openstack_hypervisor_usage{{hypervisor="{name}",'
-                f'resource="{resource}"}} {amount}'
-            )
+            usage_guage.add_metric([name, resource], amount)
 
         response = placement_client.get(
             f"/resource_providers/{rp_id}/inventories",
@@ -280,11 +287,9 @@ def print_host_usage(resource_providers, placement_client):
 
         for resource, data in inventories.items():
             amount = data["total"] - data["reserved"]
-            print(
-                f'openstack_hypervisor_allocatable_capacity{{hypervisor="{name}",'
-                f'resource="{resource}"}} {amount}'
-            )
+            capacity_guage.add_metric([name, resource], amount)
     # print(json.dumps(resource_providers, indent=2))
+    return [usage_guage, capacity_guage]
 
 
 def print_exporter_data(app):
@@ -294,7 +299,7 @@ def print_exporter_data(app):
 class OpenStackCapacityCollector(object):
     def __init__(self):
         self.conn = openstack.connect()
-        openstack.enable_logging(debug=True)
+        openstack.enable_logging(debug=False)
         print("got openstack connection")
         # for some reason this makes the logging work?!
         self.conn.compute.flavors()
@@ -306,15 +311,14 @@ class OpenStackCapacityCollector(object):
         guages = []
 
         conn = openstack.connect()
-        openstack.enable_logging(debug=True)
+        openstack.enable_logging(debug=False)
         try:
             resource_providers, host_guages = get_host_details(
                 conn.compute, conn.placement
             )
             guages += host_guages
-
             guages += get_project_usage(conn.identity, conn.placement, conn.compute)
-            print_host_usage(resource_providers, conn.placement)
+            guages += get_host_usage(resource_providers, conn.placement)
         except Exception as e:
             print(f"error {e}")
 
