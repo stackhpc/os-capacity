@@ -42,3 +42,52 @@ Or just run via docker or similar:::
       --mount type=bind,source=/etc/openstack/,target=/etc/openstack/ \
      --env OS_CLOUD=openstack --env OS_CLIENT_CONFIG_FILE=/etc/openstack/mycloud.yaml \
      -p 9000:9000 ghcr.io/stackhpc/os-capacity:master
+   curl localhost:9000
+
+Here is some example output from the exporter:::
+
+   # HELP openstack_free_capacity_by_flavor_total Free capacity if you fill the cloud full of each flavor
+   # TYPE openstack_free_capacity_by_flavor_total gauge
+   openstack_free_capacity_by_flavor_total{flavor_name="amphora"} 821.0
+   openstack_free_capacity_by_flavor_total{flavor_name="bmtest"} 1.0
+   openstack_free_capacity_by_flavor_total{flavor_name="large"} 46.0
+   openstack_free_capacity_by_flavor_total{flavor_name="medium"} 94.0
+   openstack_free_capacity_by_flavor_total{flavor_name="small"} 191.0
+   openstack_free_capacity_by_flavor_total{flavor_name="tiny"} 385.0
+   openstack_free_capacity_by_flavor_total{flavor_name="xlarge"} 19.0
+   openstack_free_capacity_by_flavor_total{flavor_name="pinnned.full"} 1.0
+   openstack_free_capacity_by_flavor_total{flavor_name="pinnned.half"} 2.0
+   openstack_free_capacity_by_flavor_total{flavor_name="pinned.large"} 2.0
+   openstack_free_capacity_by_flavor_total{flavor_name="pinned.quarter"} 4.0
+   openstack_free_capacity_by_flavor_total{flavor_name="pinned.tiny"} 53.0
+   ...
+   # HELP openstack_free_capacity_hypervisor_by_flavor Free capacity for each hypervisor if you fill remaining space full of each flavor
+   # TYPE openstack_free_capacity_hypervisor_by_flavor gauge
+   openstack_free_capacity_hypervisor_by_flavor{az_aggregate="regular",flavor_name="amphora",hypervisor="ctrl1",project_aggregate="test"} 263.0
+   ...
+   # HELP openstack_project_filter_aggregate Mapping of project_ids to aggregates in the host free capacity info.
+   # TYPE openstack_project_filter_aggregate gauge
+   openstack_project_filter_aggregate{aggregate="test",project_id="c6992a4f9f5a45fab23114d032fca40b"} 1.0
+   ...
+   # HELP openstack_project_usage Current placement allocations per project.
+   # TYPE openstack_project_usage gauge
+   openstack_project_usage{placement_resource="VCPU",project_id="c6992a4f9f5a45fab23114d032fca40b",project_name="test"} 136.0
+   openstack_project_usage{placement_resource="MEMORY_MB",project_id="c6992a4f9f5a45fab23114d032fca40b",project_name="test"} 278528.0
+   openstack_project_usage{placement_resource="DISK_GB",project_id="c6992a4f9f5a45fab23114d032fca40b",project_name="test"} 1440.0
+   ...
+   # HELP openstack_project_quota Current quota set to limit max resource allocations per project.
+   # TYPE openstack_project_quota gauge
+   openstack_project_quota{project_id="c6992a4f9f5a45fab23114d032fca40a",project_name="test",quota_resource="CPUS"} -1.0
+   openstack_project_quota{project_id="c6992a4f9f5a45fab23114d032fca40a",project_name="test",quota_resource="MEMORY_MB"} -1.0
+   ...
+   # HELP openstack_hypervisor_placement_allocated Currently allocated resource for each provider in placement.
+   # TYPE openstack_hypervisor_placement_allocated gauge
+   openstack_hypervisor_placement_allocated{hypervisor="ctrl1",resource="VCPU"} 65.0
+   openstack_hypervisor_placement_allocated{hypervisor="ctrl1",resource="MEMORY_MB"} 132096.0
+   openstack_hypervisor_placement_allocated{hypervisor="ctrl1",resource="DISK_GB"} 485.0
+   ...
+   # HELP openstack_hypervisor_placement_allocatable_capacity The total allocatable resource in the placement inventory.
+   # TYPE openstack_hypervisor_placement_allocatable_capacity gauge
+   openstack_hypervisor_placement_allocatable_capacity{hypervisor="ctrl1",resource="VCPU"} 320.0
+   openstack_hypervisor_placement_allocatable_capacity{hypervisor="ctrl1",resource="MEMORY_MB"} 622635.0
+   openstack_hypervisor_placement_allocatable_capacity{hypervisor="ctrl1",resource="DISK_GB"} 19551.0
