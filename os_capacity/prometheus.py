@@ -10,8 +10,7 @@ def get_capacity_per_flavor(placement_client, flavors):
     capacity_per_flavor = {}
 
     for flavor in flavors:
-        resources, traits = get_placement_request(flavor)
-        max_per_host = get_max_per_host(placement_client, resources, traits)
+        max_per_host = get_max_per_host(placement_client, flavor)
         capacity_per_flavor[flavor.name] = max_per_host
 
     return capacity_per_flavor
@@ -46,7 +45,8 @@ def get_placement_request(flavor):
     return resources, required_traits
 
 
-def get_max_per_host(placement_client, resources, required_traits):
+def get_max_per_host(placement_client, flavor):
+    resources, required_traits = get_placement_request(flavor)
     resource_str = ",".join(
         [key + ":" + str(value) for key, value in resources.items() if value]
     )
@@ -80,7 +80,7 @@ def get_max_per_host(placement_client, resources, required_traits):
         if max_counts:
             count_per_rp[rp_uuid] = min(max_counts)
     if not count_per_rp:
-        print(f"# WARNING - no candidates for: {params}")
+        print(f"# WARNING - no candidates hosts for flavor: {flavor.name} {params}")
     return count_per_rp
 
 
@@ -178,12 +178,52 @@ def print_host_details(compute_client, placement_client):
     for project, names in project_to_aggregate.items():
         for name in names:
             print(
-                f'openstack_project_filter_aggregate{{project="{project}",aggregate="{name}"}} 1'
+                f'openstack_project_filter_aggregate{{project_id="{project}",aggregate="{name}"}} 1'
             )
 
 
-def print_project_usage_(indentity_client, placement_client):
-    pass
+def print_project_usage(indentity_client, placement_client, compute_client):
+    projects = {proj.id: dict(name=proj.name) for proj in indentity_client.projects()}
+    for project_id in projects.keys():
+        # TODO(johngarbutt) On Xena we should do consumer_type=INSTANCE using 1.38!
+        response = placement_client.get(
+            f"/usages?project_id={project_id}",
+            headers={"OpenStack-API-Version": "placement 1.19"},
+        )
+        response.raise_for_status()
+        usages = response.json()
+        projects[project_id]["usages"] = usages["usages"]
+
+        response = compute_client.get(
+            f"/os-quota-sets/{project_id}",
+            headers={"OpenStack-API-Version": "compute 2.20"},
+        )
+        response.raise_for_status()
+        quotas = response.json().get("quota_set", {})
+        projects[project_id]["quotas"] = dict(
+            CPUS=quotas.get("cores"), MEMORY_MB=quotas.get("ram")
+        )
+
+    # print(json.dumps(projects, indent=2))
+    for project_id, data in projects.items():
+        name = data["name"]
+        project_usages = data["usages"]
+        for resource, amount in project_usages.items():
+            print(
+                f'openstack_project_usage{{project_id="{project_id}",'
+                f'project_name="{name}",resource="{resource}"}} {amount}'
+            )
+
+        if not project_usages:
+            # skip projects with zero usage?
+            print(f"# WARNING no usage for project: {name} {project_id}")
+            continue
+        project_quotas = data["quotas"]
+        for resource, amount in project_quotas.items():
+            print(
+                f'openstack_project_quota{{project_id="{project_id}",'
+                f'project_name="{name}",resource="{resource}"}} {amount}'
+            )
 
 
 def print_exporter_data(app):
@@ -193,3 +233,4 @@ def print_exporter_data(app):
 if __name__ == "__main__":
     conn = openstack.connect()
     print_host_details(conn.compute, conn.placement)
+    print_project_usage(conn.identity, conn.placement, conn.compute)
