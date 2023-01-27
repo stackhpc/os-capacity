@@ -77,8 +77,8 @@ Here is some example output from the exporter:::
    ...
    # HELP openstack_project_quota Current quota set to limit max resource allocations per project.
    # TYPE openstack_project_quota gauge
-   openstack_project_quota{project_id="c6992a4f9f5a45fab23114d032fca40a",project_name="test",quota_resource="CPUS"} -1.0
-   openstack_project_quota{project_id="c6992a4f9f5a45fab23114d032fca40a",project_name="test",quota_resource="MEMORY_MB"} -1.0
+   openstack_project_quota{project_id="c6992a4f9f5a45fab23114d032fca40b",project_name="test",quota_resource="CPUS"} -1.0
+   openstack_project_quota{project_id="c6992a4f9f5a45fab23114d032fca40b",project_name="test",quota_resource="MEMORY_MB"} -1.0
    ...
    # HELP openstack_hypervisor_placement_allocated Currently allocated resource for each provider in placement.
    # TYPE openstack_hypervisor_placement_allocated gauge
