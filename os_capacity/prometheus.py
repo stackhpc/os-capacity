@@ -286,7 +286,7 @@ def get_host_usage(resource_providers, placement_client):
         resource_providers[name]["inventories"] = inventories
 
         for resource, data in inventories.items():
-            amount = data["total"] - data["reserved"]
+            amount = int(data["total"] * data["allocation_ratio"]) - data["reserved"]
             capacity_guage.add_metric([name, resource], amount)
     # print(json.dumps(resource_providers, indent=2))
     return [usage_guage, capacity_guage]
