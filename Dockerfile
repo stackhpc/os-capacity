@@ -7,4 +7,4 @@ RUN pip install -U -r /opt/os-capacity/requirements.txt
 
 COPY ./os_capacity/prometheus.py /opt/os-capacity/prometheus.py
 ENTRYPOINT ["tini", "--"]
-CMD ["python3", "/opt/os-capacity/prometheus.py"]
+CMD ["python3", "-u", "/opt/os-capacity/prometheus.py"]
