@@ -2,8 +2,12 @@
 
 import collections
 import json
+import time
+import uuid
 
 import openstack
+import prometheus_client as prom_client
+from prometheus_client import core as prom_core
 
 
 def get_capacity_per_flavor(placement_client, flavors):
@@ -266,8 +270,46 @@ def print_exporter_data(app):
     print_host_free_details(app.compute_client, app.placement_client)
 
 
+class OpenStackCapacityCollector(object):
+    def __init__(self):
+        self.conn = openstack.connect()
+        openstack.enable_logging(debug=True)
+        print("got openstack connection")
+        # for some reason this makes the logging work?!
+        self.conn.compute.flavors()
+
+    def collect(self):
+        start_time = time.perf_counter()
+        collect_id = uuid.uuid4().hex
+        print(f"Collect started {collect_id}")
+        guages = []
+
+        conn = openstack.connect()
+        openstack.enable_logging(debug=True)
+        try:
+            resource_providers = print_host_details(conn.compute, conn.placement)
+            print_project_usage(conn.identity, conn.placement, conn.compute)
+            print_host_usage(resource_providers, conn.placement)
+        except Exception as e:
+            print(f"error {e}")
+
+        gauge = prom_core.GaugeMetricFamily(
+            "random_number",
+            "A random number generator, I have no better idea",
+            labels=["randomNum"],
+        )
+        gauge.add_metric(["mine"], 42)
+        guages.append(gauge)
+
+        end_time = time.perf_counter()
+        duration = end_time - start_time
+        print(f"Collect complete {collect_id} it took {duration} seconds")
+        return guages
+
+
 if __name__ == "__main__":
-    conn = openstack.connect()
-    resource_providers = print_host_details(conn.compute, conn.placement)
-    print_project_usage(conn.identity, conn.placement, conn.compute)
-    print_host_usage(resource_providers, conn.placement)
+    prom_client.start_http_server(9000)
+    prom_core.REGISTRY.register(OpenStackCapacityCollector())
+    # there must be a better way!
+    while True:
+        time.sleep(5000)
