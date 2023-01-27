@@ -2,8 +2,9 @@ FROM ubuntu:22.04
 
 RUN apt-get update && apt-get upgrade -y && apt-get install python3-pip tini -y && apt-get clean
 
-COPY . /opt/os-capacity
-RUN pip install -U -e /opt/os-capacity
+COPY ./requirements.txt /opt/os-capacity/requirements.txt
+RUN pip install -U -r /opt/os-capacity/requirements.txt
 
-ENTRYPOINT ["tini", "-g", "--"]
-CMD ["python3", "/opt/os-capacity/os_capacity/prometheus.py"]
+COPY ./os_capacity/prometheus.py /opt/os-capacity/prometheus.py
+ENTRYPOINT ["tini", "--"]
+CMD ["python3", "/opt/os-capacity/prometheus.py"]
