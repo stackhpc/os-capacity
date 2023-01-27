@@ -2,16 +2,19 @@
 
 import collections
 import json
+import time
+import uuid
 
 import openstack
+import prometheus_client as prom_client
+from prometheus_client import core as prom_core
 
 
 def get_capacity_per_flavor(placement_client, flavors):
     capacity_per_flavor = {}
 
     for flavor in flavors:
-        resources, traits = get_placement_request(flavor)
-        max_per_host = get_max_per_host(placement_client, resources, traits)
+        max_per_host = get_max_per_host(placement_client, flavor)
         capacity_per_flavor[flavor.name] = max_per_host
 
     return capacity_per_flavor
@@ -46,7 +49,8 @@ def get_placement_request(flavor):
     return resources, required_traits
 
 
-def get_max_per_host(placement_client, resources, required_traits):
+def get_max_per_host(placement_client, flavor):
+    resources, required_traits = get_placement_request(flavor)
     resource_str = ",".join(
         [key + ":" + str(value) for key, value in resources.items() if value]
     )
@@ -80,7 +84,7 @@ def get_max_per_host(placement_client, resources, required_traits):
         if max_counts:
             count_per_rp[rp_uuid] = min(max_counts)
     if not count_per_rp:
-        print(f"# WARNING - no candidates for: {params}")
+        print(f"# WARNING - no candidates hosts for flavor: {flavor.name} {params}")
     return count_per_rp
 
 
@@ -136,18 +140,29 @@ def get_resource_provider_info(compute_client, placement_client):
     return resource_providers, project_to_aggregate
 
 
-def print_details(compute_client, placement_client):
+def get_host_details(compute_client, placement_client):
     flavors = list(compute_client.flavors())
     capacity_per_flavor = get_capacity_per_flavor(placement_client, flavors)
 
     # total capacity per flavor
+    free_by_flavor_total = prom_core.GaugeMetricFamily(
+        "openstack_free_capacity_by_flavor_total",
+        "Free capacity if you fill the cloud full of each flavor",
+        labels=["flavor_name"],
+    )
     flavor_names = sorted([f.name for f in flavors])
     for flavor_name in flavor_names:
         counts = capacity_per_flavor.get(flavor_name, {}).values()
         total = 0 if not counts else sum(counts)
-        print(f'openstack_total_capacity_per_flavor{{flavor="{flavor_name}"}} {total}')
+        free_by_flavor_total.add_metric([flavor_name], total)
+        # print(f'openstack_free_capacity_by_flavor{{flavor="{flavor_name}"}} {total}')
 
     # capacity per host
+    free_by_flavor_hypervisor = prom_core.GaugeMetricFamily(
+        "openstack_free_capacity_hypervisor_by_flavor",
+        "Free capacity for each hypervisor if you fill remaining space full of each flavor",
+        labels=["hypervisor", "flavor_name", "az_aggregate", "project_aggregate"],
+    )
     resource_providers, project_to_aggregate = get_resource_provider_info(
         compute_client, placement_client
     )
@@ -161,31 +176,161 @@ def print_details(compute_client, placement_client):
             our_count = all_counts.get(rp_id, 0)
             if our_count == 0:
                 continue
-            host_str = f'hypervisor="{hostname}"'
-            az = rp.get("az")
-            if az:
-                host_str += f',az="{az}"'
-            project_filter = rp.get("project_filter")
-            if project_filter:
-                host_str += f',project_filter="{project_filter}"'
-            print(
-                f'openstack_capacity_by_hostname{{{host_str},flavor="{flavor_name}"}} {our_count}'
+            az = rp.get("az", "")
+            project_filter = rp.get("project_filter", "")
+            free_by_flavor_hypervisor.add_metric(
+                [hostname, flavor_name, az, project_filter], our_count
             )
             free_space_found = True
         if not free_space_found:
+            # TODO(johngarbutt) allocation candidates only returns some not all candidates!
             print(f"# WARNING - no free spaces found for {hostname}")
 
+    project_filter_aggregates = prom_core.GaugeMetricFamily(
+        "openstack_project_filter_aggregate",
+        "Mapping of project_ids to aggregates in the host free capacity info.",
+        labels=["project_id", "aggregate"],
+    )
     for project, names in project_to_aggregate.items():
         for name in names:
-            print(
-                f'openstack_project_filter{{project="{project}",aggregate="{name}"}} 1'
-            )
+            project_filter_aggregates.add_metric([project, name], 1)
+            # print(
+            #    f'openstack_project_filter_aggregate{{project_id="{project}",aggregate="{name}"}} 1'
+            # )
+    return resource_providers, [
+        free_by_flavor_total,
+        free_by_flavor_hypervisor,
+        project_filter_aggregates,
+    ]
+
+
+def get_project_usage(indentity_client, placement_client, compute_client):
+    projects = {proj.id: dict(name=proj.name) for proj in indentity_client.projects()}
+    for project_id in projects.keys():
+        # TODO(johngarbutt) On Xena we should do consumer_type=INSTANCE using 1.38!
+        response = placement_client.get(
+            f"/usages?project_id={project_id}",
+            headers={"OpenStack-API-Version": "placement 1.19"},
+        )
+        response.raise_for_status()
+        usages = response.json()
+        projects[project_id]["usages"] = usages["usages"]
+
+        response = compute_client.get(
+            f"/os-quota-sets/{project_id}",
+            headers={"OpenStack-API-Version": "compute 2.20"},
+        )
+        response.raise_for_status()
+        quotas = response.json().get("quota_set", {})
+        projects[project_id]["quotas"] = dict(
+            CPUS=quotas.get("cores"), MEMORY_MB=quotas.get("ram")
+        )
+    # print(json.dumps(projects, indent=2))
+
+    project_usage_guage = prom_core.GaugeMetricFamily(
+        "openstack_project_usage",
+        "Current placement allocations per project.",
+        labels=["project_id", "project_name", "placement_resource"],
+    )
+    project_quota_guage = prom_core.GaugeMetricFamily(
+        "openstack_project_quota",
+        "Current quota set to limit max resource allocations per project.",
+        labels=["project_id", "project_name", "quota_resource"],
+    )
+    for project_id, data in projects.items():
+        name = data["name"]
+        project_usages = data["usages"]
+        for resource, amount in project_usages.items():
+            project_usage_guage.add_metric([project_id, name, resource], amount)
+
+        if not project_usages:
+            # skip projects with zero usage?
+            print(f"# WARNING no usage for project: {name} {project_id}")
+            continue
+        project_quotas = data["quotas"]
+        for resource, amount in project_quotas.items():
+            project_quota_guage.add_metric([project_id, name, resource], amount)
+    return [project_usage_guage, project_quota_guage]
+
+
+def get_host_usage(resource_providers, placement_client):
+    usage_guage = prom_core.GaugeMetricFamily(
+        "openstack_hypervisor_placement_allocated",
+        "Currently allocated resource for each provider in placement.",
+        labels=["hypervisor", "resource"],
+    )
+    capacity_guage = prom_core.GaugeMetricFamily(
+        "openstack_hypervisor_placement_allocatable_capacity",
+        "The total allocatable resource in the placement inventory.",
+        labels=["hypervisor", "resource"],
+    )
+    for name, data in resource_providers.items():
+        rp_id = data["uuid"]
+        response = placement_client.get(
+            f"/resource_providers/{rp_id}/usages",
+            headers={"OpenStack-API-Version": "placement 1.19"},
+        )
+        response.raise_for_status()
+        rp_usages = response.json()["usages"]
+        resource_providers[name]["usages"] = rp_usages
+
+        for resource, amount in rp_usages.items():
+            usage_guage.add_metric([name, resource], amount)
+
+        response = placement_client.get(
+            f"/resource_providers/{rp_id}/inventories",
+            headers={"OpenStack-API-Version": "placement 1.19"},
+        )
+        response.raise_for_status()
+        inventories = response.json()["inventories"]
+        resource_providers[name]["inventories"] = inventories
+
+        for resource, data in inventories.items():
+            amount = int(data["total"] * data["allocation_ratio"]) - data["reserved"]
+            capacity_guage.add_metric([name, resource], amount)
+    # print(json.dumps(resource_providers, indent=2))
+    return [usage_guage, capacity_guage]
 
 
 def print_exporter_data(app):
-    print_details(app.compute_client, app.placement_client)
+    print_host_free_details(app.compute_client, app.placement_client)
+
+
+class OpenStackCapacityCollector(object):
+    def __init__(self):
+        self.conn = openstack.connect()
+        openstack.enable_logging(debug=False)
+        print("got openstack connection")
+        # for some reason this makes the logging work?!
+        self.conn.compute.flavors()
+
+    def collect(self):
+        start_time = time.perf_counter()
+        collect_id = uuid.uuid4().hex
+        print(f"Collect started {collect_id}")
+        guages = []
+
+        conn = openstack.connect()
+        openstack.enable_logging(debug=False)
+        try:
+            resource_providers, host_guages = get_host_details(
+                conn.compute, conn.placement
+            )
+            guages += host_guages
+            guages += get_project_usage(conn.identity, conn.placement, conn.compute)
+            guages += get_host_usage(resource_providers, conn.placement)
+        except Exception as e:
+            print(f"error {e}")
+
+        end_time = time.perf_counter()
+        duration = end_time - start_time
+        print(f"Collect complete {collect_id} it took {duration} seconds")
+        return guages
 
 
 if __name__ == "__main__":
-    conn = openstack.connect()
-    print_details(conn.compute, conn.placement)
+    prom_client.start_http_server(9000)
+    prom_core.REGISTRY.register(OpenStackCapacityCollector())
+    # there must be a better way!
+    while True:
+        time.sleep(5000)
