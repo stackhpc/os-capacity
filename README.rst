@@ -35,3 +35,10 @@ you can run the exporter doing something like this:
    ./os_capacity/prometheus.py &
    curl localhost:9000 > mytestrun
    cat mytestrun
+
+Or just run via docker or similar:::
+
+   docker run -d --name os_capacity \
+      --mount type=bind,source=/etc/openstack/,target=/etc/openstack/ \
+     --env OS_CLOUD=openstack --env OS_CLIENT_CONFIG_FILE=/etc/openstack/mycloud.yaml \
+     -p 9000:9000 ghcr.io/stackhpc/os-capacity:master
