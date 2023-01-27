@@ -140,18 +140,29 @@ def get_resource_provider_info(compute_client, placement_client):
     return resource_providers, project_to_aggregate
 
 
-def print_host_details(compute_client, placement_client):
+def get_host_details(compute_client, placement_client):
     flavors = list(compute_client.flavors())
     capacity_per_flavor = get_capacity_per_flavor(placement_client, flavors)
 
     # total capacity per flavor
+    free_by_flavor_total = prom_core.GaugeMetricFamily(
+        "openstack_free_capacity_by_flavor_total",
+        "Free capacity if you fill the cloud full of each flavor",
+        labels=["flavor_name"],
+    )
     flavor_names = sorted([f.name for f in flavors])
     for flavor_name in flavor_names:
         counts = capacity_per_flavor.get(flavor_name, {}).values()
         total = 0 if not counts else sum(counts)
-        print(f'openstack_free_capacity_by_flavor{{flavor="{flavor_name}"}} {total}')
+        free_by_flavor_total.add_metric([flavor_name], total)
+        # print(f'openstack_free_capacity_by_flavor{{flavor="{flavor_name}"}} {total}')
 
     # capacity per host
+    free_by_flavor_hypervisor = prom_core.GaugeMetricFamily(
+        "openstack_free_capacity_hypervisor_by_flavor",
+        "Free capacity if you fill the cloud full of each flavor",
+        labels=["hypervisor", "flavor_name", "az_aggregate", "project_aggregate"],
+    )
     resource_providers, project_to_aggregate = get_resource_provider_info(
         compute_client, placement_client
     )
@@ -165,27 +176,32 @@ def print_host_details(compute_client, placement_client):
             our_count = all_counts.get(rp_id, 0)
             if our_count == 0:
                 continue
-            host_str = f'hypervisor="{hostname}"'
-            az = rp.get("az")
-            if az:
-                host_str += f',az="{az}"'
-            project_filter = rp.get("project_filter")
-            if project_filter:
-                host_str += f',project_filter="{project_filter}"'
-            print(
-                f'openstack_free_capacity_by_hypervisor{{{host_str},flavor="{flavor_name}"}} {our_count}'
+            az = rp.get("az", "")
+            project_filter = rp.get("project_filter", "")
+            free_by_flavor_hypervisor.add_metric(
+                [hostname, flavor_name, az, project_filter], our_count
             )
             free_space_found = True
         if not free_space_found:
             # TODO(johngarbutt) allocation candidates only returns some not all candidates!
             print(f"# WARNING - no free spaces found for {hostname}")
 
+    project_filter_aggregates = prom_core.GaugeMetricFamily(
+        "openstack_project_filter_aggregate",
+        "Free capacity if you fill the cloud full of each flavor",
+        labels=["project_id", "aggregate"],
+    )
     for project, names in project_to_aggregate.items():
         for name in names:
-            print(
-                f'openstack_project_filter_aggregate{{project_id="{project}",aggregate="{name}"}} 1'
-            )
-    return resource_providers
+            project_filter_aggregates.add_metric([project, name], 1)
+            # print(
+            #    f'openstack_project_filter_aggregate{{project_id="{project}",aggregate="{name}"}} 1'
+            # )
+    return resource_providers, [
+        free_by_flavor_total,
+        free_by_flavor_hypervisor,
+        project_filter_aggregates,
+    ]
 
 
 def print_project_usage(indentity_client, placement_client, compute_client):
@@ -287,19 +303,15 @@ class OpenStackCapacityCollector(object):
         conn = openstack.connect()
         openstack.enable_logging(debug=True)
         try:
-            resource_providers = print_host_details(conn.compute, conn.placement)
+            resource_providers, host_guages = get_host_details(
+                conn.compute, conn.placement
+            )
+            guages += host_guages
+
             print_project_usage(conn.identity, conn.placement, conn.compute)
             print_host_usage(resource_providers, conn.placement)
         except Exception as e:
             print(f"error {e}")
-
-        gauge = prom_core.GaugeMetricFamily(
-            "random_number",
-            "A random number generator, I have no better idea",
-            labels=["randomNum"],
-        )
-        gauge.add_metric(["mine"], 42)
-        guages.append(gauge)
 
         end_time = time.perf_counter()
         duration = end_time - start_time
