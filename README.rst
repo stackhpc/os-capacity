@@ -41,7 +41,7 @@ Or just run via docker or similar:::
    docker run -d --name os_capacity \
      --mount type=bind,source=/etc/kolla/os-capacity/,target=/etc/openstack \
      --env OS_CLOUD=openstack --env OS_CLIENT_CONFIG_FILE=/etc/openstack/clouds.yaml \
-     -p 9000:9000 ghcr.io/stackhpc/os-capacity:234330f
+     -p 9000:9000 ghcr.io/stackhpc/os-capacity:e08ecb8
    curl localhost:9000
 
 Here is some example output from the exporter:::
