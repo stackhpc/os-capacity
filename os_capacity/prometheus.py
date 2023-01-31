@@ -317,8 +317,22 @@ class OpenStackCapacityCollector(object):
                 conn.compute, conn.placement
             )
             guages += host_guages
+
+            host_time = time.perf_counter()
+            host_duration = host_time - start_time
+            print(f"1 of 3 host flavor capacity complete for {collect_id} it took {host_duration} seconds")
+
             guages += get_project_usage(conn.identity, conn.placement, conn.compute)
+
+            project_time = time.perf_counter()
+            project_duration = project_time - host_time
+            print(f"2 of 3 project usage complete for {collect_id} it took {project_duration} seconds")
+
             guages += get_host_usage(resource_providers, conn.placement)
+
+            host_usage_time = time.perf_counter()
+            host_usage_duration = host_usage_time - project_time
+            print(f"3 of 3 host usage complete for {collect_id} it took {host_usage_duration} seconds")
         except Exception as e:
             print(f"error {e}")
 
