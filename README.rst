@@ -25,6 +25,7 @@ Prometheus Exporter
 -------------------
 
 Assuming you have clouds.yaml in the right place,
+and those credentials have read access to the Placement API, Nova API and Keystone APIs,
 you can run the exporter doing something like this:
 
 .. code::
