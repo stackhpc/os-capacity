@@ -91,3 +91,17 @@ Here is some example output from the exporter:::
    openstack_hypervisor_placement_allocatable_capacity{hypervisor="ctrl1",resource="VCPU"} 320.0
    openstack_hypervisor_placement_allocatable_capacity{hypervisor="ctrl1",resource="MEMORY_MB"} 622635.0
    openstack_hypervisor_placement_allocatable_capacity{hypervisor="ctrl1",resource="DISK_GB"} 19551.0
+
+Example of a prometheus scrape config:::
+
+   - job_name: os_capacity
+     relabel_configs:
+    - regex: ([^:]+):\d+
+      source_labels:
+      - __address__
+      target_label: instance
+    static_configs:
+    - targets:
+      - localhost:9000
+    scrape_interval: 2m
+    scrape_timeout: 1m
