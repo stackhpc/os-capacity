@@ -105,3 +105,7 @@ Example of a prometheus scrape config:::
       - localhost:9000
     scrape_interval: 2m
     scrape_timeout: 1m
+
+Once that is in prometheus, and its not timing out, you can visualise the data
+by importing this grafana dashboard:
+https://raw.githubusercontent.com/stackhpc/os-capacity/master/example_grafana_dashboard.json
