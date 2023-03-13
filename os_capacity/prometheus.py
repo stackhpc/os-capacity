@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import collections
 import json
 import time
@@ -343,7 +344,12 @@ class OpenStackCapacityCollector(object):
 
 
 if __name__ == "__main__":
-    prom_client.start_http_server(9000)
+    kwargs = {
+        "port": int(os.environ.get('OS_CAPACITY_EXPORTER_PORT', 9000)),
+        "addr": os.environ.get('OS_CAPACITY_EXPORTER_LISTEN_ADDRESS', '0.0.0.0'),
+    }
+    prom_client.start_http_server(**kwargs)
+
     prom_core.REGISTRY.register(OpenStackCapacityCollector())
     # there must be a better way!
     while True:
