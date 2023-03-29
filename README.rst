@@ -45,6 +45,15 @@ Or just run via docker or similar:::
      -p 9000:9000 ghcr.io/stackhpc/os-capacity:e08ecb8
    curl localhost:9000
 
+
+We aslo have the following optional environment variables:
+
+* OS_CAPACITY_EXPORTER_PORT = 9000
+* OS_CAPACITY_EXPORTER_LISTEN_ADDRESS = "0.0.0.0"
+* OS_CAPACITY_SKIP_AGGREGATE_LOOKUP = 0
+* OS_CAPACITY_SKIP_PROJECT_USAGE = 0
+* OS_CAPACITY_SKIP_HOST_USAGE = 0
+
 Here is some example output from the exporter:::
 
    # HELP openstack_free_capacity_by_flavor_total Free capacity if you fill the cloud full of each flavor
