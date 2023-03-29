@@ -311,6 +311,9 @@ class OpenStackCapacityCollector(object):
         print(f"Collect started {collect_id}")
         guages = []
 
+        skip_project_usage = int(os.environ.get('OS_CAPACITY_SKIP_PROJECT_USAGE', "0"))
+        skip_host_usage = int(os.environ.get('OS_CAPACITY_SKIP_HOST_USAGE', "0"))
+
         conn = openstack.connect()
         openstack.enable_logging(debug=False)
         try:
@@ -321,19 +324,23 @@ class OpenStackCapacityCollector(object):
 
             host_time = time.perf_counter()
             host_duration = host_time - start_time
-            print(f"1 of 3 host flavor capacity complete for {collect_id} it took {host_duration} seconds")
+            print(f"1 of 3: host flavor capacity complete for {collect_id} it took {host_duration} seconds")
 
-            guages += get_project_usage(conn.identity, conn.placement, conn.compute)
+            if not skip_project_usage:
+                guages += get_project_usage(conn.identity, conn.placement, conn.compute)
+                project_time = time.perf_counter()
+                project_duration = project_time - host_time
+                print(f"2 of 3: project usage complete for {collect_id} it took {project_duration} seconds")
+            else:
+                print("2 of 3: skipping project usage")
 
-            project_time = time.perf_counter()
-            project_duration = project_time - host_time
-            print(f"2 of 3 project usage complete for {collect_id} it took {project_duration} seconds")
-
-            guages += get_host_usage(resource_providers, conn.placement)
-
-            host_usage_time = time.perf_counter()
-            host_usage_duration = host_usage_time - project_time
-            print(f"3 of 3 host usage complete for {collect_id} it took {host_usage_duration} seconds")
+            if not skip_project_usage:
+                guages += get_host_usage(resource_providers, conn.placement)
+                host_usage_time = time.perf_counter()
+                host_usage_duration = host_usage_time - project_time
+                print(f"3 of 3: host usage complete for {collect_id} it took {host_usage_duration} seconds")
+            else:
+                print("3 of 3: skipping host usage")
         except Exception as e:
             print(f"error {e}")
 
