@@ -122,6 +122,7 @@ def get_resource_provider_info(compute_client, placement_client):
             # skip checking every resource provider for their aggregates
             continue
 
+        # TODO(johngarbutt): add a cache in here?
         response = placement_client.get(
             f"/resource_providers/{raw_rp.id}/aggregates",
             headers={"OpenStack-API-Version": "placement 1.19"},
