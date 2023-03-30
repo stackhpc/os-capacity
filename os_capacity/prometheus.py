@@ -10,6 +10,8 @@ import openstack
 import prometheus_client as prom_client
 from prometheus_client import core as prom_core
 
+RESOURCE_PROVIDER_AGGREGATE_CACHE = {}
+
 
 def get_capacity_per_flavor(placement_client, flavors):
     capacity_per_flavor = {}
@@ -122,14 +124,20 @@ def get_resource_provider_info(compute_client, placement_client):
             # skip checking every resource provider for their aggregates
             continue
 
-        # TODO(johngarbutt): add a cache in here?
-        response = placement_client.get(
-            f"/resource_providers/{raw_rp.id}/aggregates",
-            headers={"OpenStack-API-Version": "placement 1.19"},
-        )
-        response.raise_for_status()
-        aggs = response.json()
-        rp["aggregates"] = aggs["aggregates"]
+        # TODO(johngarbutt): maybe check if cached aggregate still exists?
+        aggregates = RESOURCE_PROVIDER_AGGREGATE_CACHE.get(raw_rp.id)
+        if aggregates is None:
+            response = placement_client.get(
+                f"/resource_providers/{raw_rp.id}/aggregates",
+                headers={"OpenStack-API-Version": "placement 1.19"},
+            )
+            response.raise_for_status()
+            aggs = response.json()
+            rp["aggregates"] = aggs["aggregates"]
+            RESOURCE_PROVIDER_AGGREGATE_CACHE[raw_rp.id] = aggs["aggregates"]
+        else:
+            rp["aggregates"] = aggregates
+
         for agg_id in rp["aggregates"]:
             if agg_id in azones:
                 rp["az"] = azones[agg_id]
