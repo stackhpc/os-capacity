@@ -858,7 +858,28 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "description": "The prometheus datasource used for queries.",
+        "hide": 0,
+        "includeAll": false,
+        "label": "datasource",
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
@@ -866,8 +887,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "OpenStack Capacity",
-  "uid": "1qBY6ro4z",
+  "title": "Cloud Metrics",
+  "uid": "g__ksD67z",
   "version": 14,
   "weekStart": ""
 }

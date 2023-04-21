@@ -548,7 +548,7 @@
             }
           },
           "mappings": [],
-          "max": 1,
+          "max": 100,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -842,7 +842,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
+          "uid": "${datasource}"
         },
         "definition": "openstack_project_usage",
         "hide": 0,
@@ -869,8 +869,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "OpenStack Project Status",
-  "uid": "3cryIBP4z",
+  "title": "OpenStack Project Metrics",
+  "uid": "mXiuBDe7z",
   "version": 11,
   "weekStart": ""
 }
