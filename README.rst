@@ -17,7 +17,7 @@ Now lets get that installed inside a virtual environment:
 
 .. code::
 
-    python3 -m virtualenv .venv
+    python3 -m venv .venv
     source .venv/bin/activate
     pip install -U .
 
