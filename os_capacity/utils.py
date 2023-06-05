@@ -143,13 +143,14 @@ def get_allocations_with_server_info(app, flat_usage=True, get_names=False):
             usage = ", ".join(usage_amounts)
 
         server = server_data.get(app.compute_client, allocation.consumer_uuid)
-        delta = now - server.created
-        days_running = delta.days + 1
+        if server:
+            delta = now - server.created
+            days_running = delta.days + 1
 
-        allocation_tuples.append(AllocationList(
-            rp_name, allocation.consumer_uuid, usage,
-            server.flavor_id, days_running, server.project_id,
-            server.user_id))
+            allocation_tuples.append(AllocationList(
+                rp_name, allocation.consumer_uuid, usage,
+                server.flavor_id, days_running, server.project_id,
+                server.user_id))
 
     allocation_tuples.sort(key=lambda x: (x.project_id, x.user_id,
                                           x.days * -1, x.flavor_id))
