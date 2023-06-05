@@ -10,7 +10,7 @@ First lets get the code downloaded:
 
 .. code::
 
-    git clone https://github.com/JohnGarbutt/os-capacity.git
+    git clone https://github.com/stackhpc/os-capacity.git
     cd os-capacity
 
 Now lets get that installed inside a virtual environment:
