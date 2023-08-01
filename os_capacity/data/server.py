@@ -28,7 +28,10 @@ def _parse_created(raw_created):
 
 def get(compute_client, uuid):
     url = "/servers/%s" % uuid
-    raw_server = compute_client.get(url).json()['server']
+    response = compute_client.get(url)
+    if not response.ok:
+        return None
+    raw_server = response.json()['server']
     return Server(
         uuid=raw_server['id'],
         name=raw_server['name'],

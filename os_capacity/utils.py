@@ -17,7 +17,6 @@ from datetime import datetime
 import os
 
 from os_capacity.data import flavors
-from os_capacity.data import metrics
 from os_capacity.data import resource_provider
 from os_capacity.data import server as server_data
 from os_capacity.data import users
@@ -144,13 +143,14 @@ def get_allocations_with_server_info(app, flat_usage=True, get_names=False):
             usage = ", ".join(usage_amounts)
 
         server = server_data.get(app.compute_client, allocation.consumer_uuid)
-        delta = now - server.created
-        days_running = delta.days + 1
+        if server:
+            delta = now - server.created
+            days_running = delta.days + 1
 
-        allocation_tuples.append(AllocationList(
-            rp_name, allocation.consumer_uuid, usage,
-            server.flavor_id, days_running, server.project_id,
-            server.user_id))
+            allocation_tuples.append(AllocationList(
+                rp_name, allocation.consumer_uuid, usage,
+                server.flavor_id, days_running, server.project_id,
+                server.user_id))
 
     allocation_tuples.sort(key=lambda x: (x.project_id, x.user_id,
                                           x.days * -1, x.flavor_id))
@@ -203,7 +203,6 @@ def group_usage(app, group_by="user"):
     all_users = users.get_all(app.identity_client)
     all_projects = users.get_all_projects(app.identity_client)
 
-    metrics_to_send = []
     summary_tuples = []
     for key, group in grouped_allocations.items():
         grouped_usage = collections.defaultdict(int)
@@ -249,21 +248,7 @@ def group_usage(app, group_by="user"):
             value_meta = {'usage_summary': usage}
             dimensions['version'] = '2.0'
 
-            metrics_to_send.append(metrics.Metric(
-                name="usage.%s.count" % group_by,
-                value=grouped_usage['Count'],
-                value_meta=value_meta,
-                dimensions=dimensions))
-            metrics_to_send.append(metrics.Metric(
-                name="usage.%s.days.count" % group_by,
-                value=grouped_usage_days['Count'],
-                value_meta=value_meta,
-                dimensions=dimensions))
-
     # Sort my largest current usage first
     summary_tuples.sort(key=lambda x: x[1], reverse=True)
-
-    if metrics_to_send:
-        metrics.send_metrics(app.monitoring_client, metrics_to_send)
 
     return summary_tuples
