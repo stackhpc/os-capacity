@@ -59,7 +59,9 @@ def get_max_per_host(placement_client, flavor):
     )
     required_str = ",".join(required_traits)
     # TODO(johngarbut): remove disabled!
-    forbidden_str = "COMPUTE_STATUS_DISABLED"
+    if required_str:
+        required_str += ","
+    required_str += "!COMPUTE_STATUS_DISABLED"
 
     params = {"resources": resource_str}
     if not resource_str:
