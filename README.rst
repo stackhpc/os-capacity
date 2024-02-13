@@ -118,4 +118,4 @@ Example of a prometheus scrape config:::
 
 Once that is in prometheus, and its not timing out, you can visualise the data
 by importing this grafana dashboard:
-https://raw.githubusercontent.com/stackhpc/os-capacity/master/example_grafana_dashboard.json
+https://raw.githubusercontent.com/stackhpc/os-capacity/master/grafana_cloud_dashboard.json
