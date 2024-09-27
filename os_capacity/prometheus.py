@@ -167,13 +167,13 @@ def get_host_details(compute_client, placement_client):
     free_by_flavor_total = prom_core.GaugeMetricFamily(
         "openstack_free_capacity_by_flavor_total",
         "Free capacity if you fill the cloud full of each flavor",
-        labels=["flavor_name"],
+        labels=["flavor_name", "public"],
     )
-    flavor_names = sorted([f.name for f in flavors])
-    for flavor_name in flavor_names:
-        counts = capacity_per_flavor.get(flavor_name, {}).values()
+
+    for flavor in flavors:
+        counts = capacity_per_flavor.get(flavor.name, {}).values()
         total = 0 if not counts else sum(counts)
-        free_by_flavor_total.add_metric([flavor_name], total)
+        free_by_flavor_total.add_metric([flavor.name, str(flavor.is_public)], total)
         # print(f'openstack_free_capacity_by_flavor{{flavor="{flavor_name}"}} {total}')
 
     # capacity per host
