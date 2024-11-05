@@ -1,7 +1,6 @@
 name: Tox unit tests
 
-on:
-  workflow_call:
+on: push
 
 jobs:
   build:
