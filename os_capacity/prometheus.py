@@ -1,8 +1,18 @@
 #!/usr/bin/env python3
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
-import os
 import collections
-import json
+import os
 import time
 import uuid
 
@@ -174,12 +184,12 @@ def get_host_details(compute_client, placement_client):
         counts = capacity_per_flavor.get(flavor.name, {}).values()
         total = 0 if not counts else sum(counts)
         free_by_flavor_total.add_metric([flavor.name, str(flavor.is_public)], total)
-        # print(f'openstack_free_capacity_by_flavor{{flavor="{flavor_name}"}} {total}')
 
     # capacity per host
     free_by_flavor_hypervisor = prom_core.GaugeMetricFamily(
         "openstack_free_capacity_hypervisor_by_flavor",
-        "Free capacity for each hypervisor if you fill remaining space full of each flavor",
+        "Free capacity for each hypervisor if you fill "
+        "remaining space full of each flavor",
         labels=["hypervisor", "flavor_name", "az_aggregate", "project_aggregate"],
     )
     resource_providers, project_to_aggregate = get_resource_provider_info(
@@ -203,7 +213,8 @@ def get_host_details(compute_client, placement_client):
             )
             free_space_found = True
         if not free_space_found:
-            # TODO(johngarbutt) allocation candidates only returns some not all candidates!
+            # TODO(johngarbutt) allocation candidates only returns some,
+            # not all candidates!
             print(f"# WARNING - no free spaces found for {hostname}")
 
     project_filter_aggregates = prom_core.GaugeMetricFamily(
@@ -214,9 +225,6 @@ def get_host_details(compute_client, placement_client):
     for project, names in project_to_aggregate.items():
         for name in names:
             project_filter_aggregates.add_metric([project, name], 1)
-            # print(
-            #    f'openstack_project_filter_aggregate{{project_id="{project}",aggregate="{name}"}} 1'
-            # )
     return resource_providers, [
         free_by_flavor_total,
         free_by_flavor_hypervisor,
@@ -312,10 +320,6 @@ def get_host_usage(resource_providers, placement_client):
     return [usage_guage, capacity_guage]
 
 
-def print_exporter_data(app):
-    print_host_free_details(app.compute_client, app.placement_client)
-
-
 class OpenStackCapacityCollector(object):
     def __init__(self):
         self.conn = openstack.connect()
@@ -346,7 +350,8 @@ class OpenStackCapacityCollector(object):
             host_time = time.perf_counter()
             host_duration = host_time - start_time
             print(
-                f"1 of 3: host flavor capacity complete for {collect_id} it took {host_duration} seconds"
+                "1 of 3: host flavor capacity complete "
+                f"for {collect_id} it took {host_duration} seconds"
             )
 
             if not skip_project_usage:
@@ -354,17 +359,19 @@ class OpenStackCapacityCollector(object):
                 project_time = time.perf_counter()
                 project_duration = project_time - host_time
                 print(
-                    f"2 of 3: project usage complete for {collect_id} it took {project_duration} seconds"
+                    "2 of 3: project usage complete "
+                    f"for {collect_id} it took {project_duration} seconds"
                 )
             else:
                 print("2 of 3: skipping project usage")
 
-            if not skip_project_usage:
+            if not skip_host_usage:
                 guages += get_host_usage(resource_providers, conn.placement)
                 host_usage_time = time.perf_counter()
                 host_usage_duration = host_usage_time - project_time
                 print(
-                    f"3 of 3: host usage complete for {collect_id} it took {host_usage_duration} seconds"
+                    "3 of 3: host usage complete for "
+                    f"{collect_id} it took {host_usage_duration} seconds"
                 )
             else:
                 print("3 of 3: skipping host usage")
@@ -377,7 +384,7 @@ class OpenStackCapacityCollector(object):
         return guages
 
 
-if __name__ == "__main__":
+def main():
     kwargs = {
         "port": int(os.environ.get("OS_CAPACITY_EXPORTER_PORT", 9000)),
         "addr": os.environ.get("OS_CAPACITY_EXPORTER_LISTEN_ADDRESS", "0.0.0.0"),
@@ -388,3 +395,7 @@ if __name__ == "__main__":
     # there must be a better way!
     while True:
         time.sleep(5000)
+
+
+if __name__ == "__main__":
+    main()
