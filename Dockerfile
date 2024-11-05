@@ -44,6 +44,9 @@ RUN groupadd --gid $APP_GID $APP_GROUP && \
       --uid $APP_UID \
       $APP_USER
 
+# Don't buffer stdout and stderr as it breaks realtime logging
+ENV PYTHONUNBUFFERED=1
+
 USER $APP_UID
 ENTRYPOINT ["tini", "--"]
 CMD ["os_capacity"]
