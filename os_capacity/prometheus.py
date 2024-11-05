@@ -376,7 +376,7 @@ class OpenStackCapacityCollector(object):
         return guages
 
 
-if __name__ == "__main__":
+def main():
     kwargs = {
         "port": int(os.environ.get("OS_CAPACITY_EXPORTER_PORT", 9000)),
         "addr": os.environ.get("OS_CAPACITY_EXPORTER_LISTEN_ADDRESS", "0.0.0.0"),
@@ -387,3 +387,7 @@ if __name__ == "__main__":
     # there must be a better way!
     while True:
         time.sleep(5000)
+
+
+if __name__ == "__main__":
+    main()

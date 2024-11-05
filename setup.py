@@ -19,7 +19,7 @@ from setuptools import setup
 
 
 PROJECT = 'os_capacity'
-VERSION = '0.2'
+VERSION = '0.4'
 
 try:
     long_description = open('README.md', 'rt').read()
@@ -48,16 +48,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'os-capacity = os_capacity.shell:main',
-        ],
-        'os_capacity.commands': [
-            'flavor_list = os_capacity.commands.commands:FlavorList',
-            'resources_all = os_capacity.commands.commands:ListResourcesAll',
-            'resources_group = os_capacity.commands'
-            '.commands:ListResourcesGroups',
-            'usages_all = os_capacity.commands.commands:ListUsagesAll',
-            'usages_group = os_capacity.commands.commands:ListUsagesGroup',
-            'prometheus = os_capacity.commands.commands:PrometheusAll',
+            'os-capacity = os_capacity.prometheus:main',
         ],
     },
 )
