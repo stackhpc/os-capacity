@@ -190,7 +190,8 @@ def get_host_details(compute_client, placement_client):
         rp = resource_providers[hostname]
         rp_id = rp["uuid"]
         free_space_found = False
-        for flavor_name in flavor_names:
+        for flavor in flavors:
+            flavor_name = flavor.name
             all_counts = capacity_per_flavor.get(flavor_name, {})
             our_count = all_counts.get(rp_id, 0)
             if our_count == 0:
