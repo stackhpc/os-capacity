@@ -1,7 +1,11 @@
 os-capacity
 ===========
 
-This is a prototype tool to extract capacity information.
+This is a prototype prometheus exporter
+to extract capacity information from OpenStack Placement.
+
+It includes support for both baremetal flavors
+and flavors with PCPU resources implied.
 
 Install
 -------
