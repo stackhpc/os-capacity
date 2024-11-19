@@ -231,6 +231,65 @@ def get_host_details(compute_client, placement_client):
         project_filter_aggregates,
     ]
 
+def get_host_aggregate_details(compute_client):
+    nova_aggregates = list(compute_client.aggregates())
+    host_aggregate_list = []
+    #Retrieve all aggregates, their hosts and zones into list of dicts
+    all_hosts = list(compute_client.services(binary="nova-compute"))
+    for agg in nova_aggregates:
+        az = agg.metadata.get("availability_zone")
+        aggregate_dict = {
+            "hosts": agg.hosts,
+            "aggregate": agg.name,
+            "availability_zone": az
+        }
+        host_aggregate_list.append(aggregate_dict)
+
+    host_data = {}
+    all_agg_hosts = []
+    all_compute_hosts = []
+    # Retrieve hosts in aggregates and all compute hosts as lists
+    for item in host_aggregate_list:
+        if "hosts" in item:
+            all_agg_hosts.extend(item["hosts"])
+    for hv in all_hosts:
+        all_compute_hosts.append(hv.host)
+    # Extract hosts not in aggregates
+    no_agg_hosts = list(set(all_compute_hosts) - set(all_agg_hosts))
+    for entry in host_aggregate_list:
+        aggregate_name = entry["aggregate"]
+        availability_zone = entry["availability_zone"]
+        for host in entry["hosts"]:
+            if host not in host_data:
+                host_data[host] = {
+                     "hypervisor": host,
+                     "aggregates": [],
+                     "availability_zone": availability_zone
+                }
+            host_data[host]["aggregates"].append(aggregate_name)
+    host_data = list(host_data.values())
+    for hv in all_hosts:
+        if hv.host in no_agg_hosts:
+            host_info = {
+                 "hypervisor": hv.host,
+                 "aggregates": [],
+                 "availability_zone": hv.availability_zone
+            }
+            host_data.append(host_info)
+    hypervisor_aggregate_association = prom_core.GaugeMetricFamily(
+         "openstack_hypervisor_placement_aggregate_relation",
+         "Mapping of hypervisor to aggregates in the availability zone.",
+         labels=["hypervisor", "aggregates", "availability_zone"]
+    )
+    for entry in host_data:
+        aggregates_list = entry["aggregates"] if entry["aggregates"] else [None]
+        aggregates_str = ",".join(str(agg) for agg in aggregates_list)
+        value = 1 if entry["aggregates"] else 0
+        hypervisor_aggregate_association.add_metric(
+            [entry["hypervisor"], aggregates_str, entry["availability_zone"]],
+            value
+        )
+    return [hypervisor_aggregate_association]
 
 def get_project_usage(indentity_client, placement_client, compute_client):
     projects = {proj.id: dict(name=proj.name) for proj in indentity_client.projects()}
@@ -350,7 +409,7 @@ class OpenStackCapacityCollector(object):
             host_time = time.perf_counter()
             host_duration = host_time - start_time
             print(
-                "1 of 3: host flavor capacity complete "
+                "1 of 4: host flavor capacity complete "
                 f"for {collect_id} it took {host_duration} seconds"
             )
 
@@ -359,22 +418,30 @@ class OpenStackCapacityCollector(object):
                 project_time = time.perf_counter()
                 project_duration = project_time - host_time
                 print(
-                    "2 of 3: project usage complete "
+                    "2 of 4: project usage complete "
                     f"for {collect_id} it took {project_duration} seconds"
                 )
             else:
-                print("2 of 3: skipping project usage")
+                print("2 of 4: skipping project usage")
 
             if not skip_host_usage:
                 guages += get_host_usage(resource_providers, conn.placement)
                 host_usage_time = time.perf_counter()
                 host_usage_duration = host_usage_time - project_time
                 print(
-                    "3 of 3: host usage complete for "
+                    "3 of 4: host usage complete for "
                     f"{collect_id} it took {host_usage_duration} seconds"
                 )
             else:
-                print("3 of 3: skipping host usage")
+                print("3 of 4: skipping host usage")
+            aggr_time = time.perf_counter()
+            guages += get_host_aggregate_details(conn.compute)
+            aggr_end_time = time.perf_counter()
+            aggr_duration = aggr_end_time - aggr_time
+            print(
+                "4 of 4: host aggregate relation complete "
+                f"for {collect_id} it took {aggr_duration} seconds"
+            )
         except Exception as e:
             print(f"error {e}")
 
