@@ -20,6 +20,8 @@ import openstack
 import prometheus_client as prom_client
 from prometheus_client import core as prom_core
 
+from os_capacity import api_test
+
 RESOURCE_PROVIDER_AGGREGATE_CACHE = {}
 
 
@@ -391,7 +393,8 @@ def main():
     }
     prom_client.start_http_server(**kwargs)
 
-    prom_core.REGISTRY.register(OpenStackCapacityCollector())
+    # prom_core.REGISTRY.register(OpenStackCapacityCollector())
+    prom_core.REGISTRY.register(api_test.OpenStackAPITestCollector())
     # there must be a better way!
     while True:
         time.sleep(5000)
