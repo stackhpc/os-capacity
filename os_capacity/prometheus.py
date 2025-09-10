@@ -393,7 +393,7 @@ def main():
     }
     prom_client.start_http_server(**kwargs)
 
-    # prom_core.REGISTRY.register(OpenStackCapacityCollector())
+    prom_core.REGISTRY.register(OpenStackCapacityCollector())
     prom_core.REGISTRY.register(api_test.OpenStackAPITestCollector())
     # there must be a better way!
     while True:
