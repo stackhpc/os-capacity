@@ -50,7 +50,7 @@ class OpenStackAPITestCollector(object):
         )
         image_count.add_metric([conn.current_project_id], len(images))
         return [image_count]
-    
+
     def _check_volumes(self, conn):
         for i in range(RETRY_COUNT):
             volumes = list(conn.block_storage.volumes())
@@ -61,7 +61,7 @@ class OpenStackAPITestCollector(object):
         )
         volume_count.add_metric([conn.current_project_id], len(volumes))
         return [volume_count]
-    
+
     def _check_ironic(self, conn):
         for i in range(RETRY_COUNT):
             nodes = list(conn.bare_metal.nodes())
@@ -72,7 +72,7 @@ class OpenStackAPITestCollector(object):
         )
         ironic_node_count.add_metric([conn.current_project_id], len(nodes))
         return [ironic_node_count]
-    
+
     def _check_identity(self, conn):
         user = conn.current_user_id
         for i in range(RETRY_COUNT):
@@ -84,7 +84,7 @@ class OpenStackAPITestCollector(object):
         )
         project_count.add_metric([conn.current_project_id], len(projects))
         return [project_count]
-    
+
     def _check_network(self, conn):
         for i in range(RETRY_COUNT):
             networks = list(conn.network.networks())
@@ -104,7 +104,7 @@ class OpenStackAPITestCollector(object):
         )
         port_count.add_metric([conn.current_project_id], len(ports))
         return [network_count, port_count]
-    
+
     def _check_load_balancer(self, conn):
         for i in range(RETRY_COUNT):
             lbs = list(conn.load_balancer.load_balancers())
