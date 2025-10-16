@@ -339,11 +339,10 @@ class OpenStackCapacityCollector(object):
         )
         skip_host_usage = int(os.environ.get("OS_CAPACITY_SKIP_HOST_USAGE", "0")) == 1
 
-        conn = openstack.connect()
         openstack.enable_logging(debug=False)
         try:
             resource_providers, host_guages = get_host_details(
-                conn.compute, conn.placement
+                self.conn.compute, self.conn.placement
             )
             guages += host_guages
 
@@ -355,7 +354,9 @@ class OpenStackCapacityCollector(object):
             )
 
             if not skip_project_usage:
-                guages += get_project_usage(conn.identity, conn.placement, conn.compute)
+                guages += get_project_usage(
+                    self.conn.identity, self.conn.placement, self.conn.compute
+                )
                 project_time = time.perf_counter()
                 project_duration = project_time - host_time
                 print(
@@ -366,7 +367,7 @@ class OpenStackCapacityCollector(object):
                 print("2 of 3: skipping project usage")
 
             if not skip_host_usage:
-                guages += get_host_usage(resource_providers, conn.placement)
+                guages += get_host_usage(resource_providers, self.conn.placement)
                 host_usage_time = time.perf_counter()
                 host_usage_duration = host_usage_time - project_time
                 print(
